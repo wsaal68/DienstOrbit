@@ -1,6 +1,5 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-# DienstOrbit
 <img width="1024" height="250" alt="DienstOrbit Logo mit Schriftzug 1024x250" src="https://github.com/user-attachments/assets/56cda79c-a78e-4284-b28b-5f27dacadd27" />
 
 
