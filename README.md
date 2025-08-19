@@ -3,7 +3,7 @@
 <img width="1024" height="250" alt="DienstOrbit Logo mit Schriftzug 1024x250" src="https://github.com/user-attachments/assets/56cda79c-a78e-4284-b28b-5f27dacadd27" />
 
 
-## Dienstreihen im Orbit: smart planen, sauber exportieren.
+## Dienstpläne im Orbit: smart planen, sauber exportieren.
 
 DienstOrbit ist ein Dienstplan-Generator für THW-Ortsverbände und ähnliche Organisationen. Die Anwendung berücksichtigt Feiertage und Ferien nach Bundesland und ermöglicht den Export der Termine als CSV, PDF, ICS und Excel.
 
