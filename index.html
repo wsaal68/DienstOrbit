@@ -1089,10 +1089,11 @@ async function exportXlsx(){
   } catch(err){ console.error('Excel-Export fehlgeschlagen:', err); alert('Excel-Export fehlgeschlagen. Details in der Konsole.'); }
 }
 
-document.getElementById('btnCsv').addEventListener('click', exportCsv);
-document.getElementById('btnPdf').addEventListener('click', exportPdf);
-document.getElementById('btnIcs').addEventListener('click', exportIcs);
-document.getElementById('btnXlsx').addEventListener('click', exportXlsx);
+// Event-Listener nur hinzufügen, wenn die Buttons existieren
+document.getElementById('btnCsv')?.addEventListener('click', exportCsv);
+document.getElementById('btnPdf')?.addEventListener('click', exportPdf);
+document.getElementById('btnIcs')?.addEventListener('click', exportIcs);
+document.getElementById('btnXlsx')?.addEventListener('click', exportXlsx);
 
 /* ===== Floating Buttons Verhalten ===== */
 const btnToTop = $('#btnToTop');
@@ -1110,8 +1111,9 @@ function updateResultsButtonVisibility(){
   btnToResults.classList.toggle('show', !!show);
 }
 function updateExportButtonVisibility(){
-  // Export-Button immer zeigen, wenn Export-Buttons aktiviert sind
-  const enabled = !$('#btnCsv').disabled || !$('#btnPdf').disabled || !$('#btnIcs').disabled || !$('#btnXlsx').disabled;
+  // Export-Button immer zeigen, wenn mindestens ein Export-Button aktiviert ist
+  const enabled=['#btnCsv','#btnPdf','#btnIcs','#btnXlsx']
+    .some(sel=>{ const el=$(sel); return el && !el.disabled; });
   btnToExport.classList.toggle('show', enabled);
 }
 
