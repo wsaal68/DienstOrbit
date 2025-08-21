@@ -5,50 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DienstOrbit – Dienstplan-Generator</title>
 
-  <!-- Basic -->
+  <!-- Meta -->
   <meta name="application-name" content="DienstOrbit" />
   <meta name="author" content="Wolfgang Saal" />
-  <meta name="description" content="Dienstreihen im Orbit: smart planen, sauber exportieren. DienstOrbit ist ein Dienstplan-Generator mit Berücksichtigung von Ferien & Feiertagen nach Bundesland. Export: CSV, PDF, ICS, Excel." />
-  <meta name="keywords" content="Dienstplan, THW, Termine, Ferien, Feiertage, Kalender, Export, CSV, PDF, ICS, Excel" />
+  <meta name="description" content="Dienstplan im Orbit: smart planen, sauber exportieren. DienstOrbit ist ein Dienstplan-Generator mit Berücksichtigung von Ferien & Feiertagen nach Bundesland. Export: CSV, PDF, ICS, Excel." />
   <meta name="robots" content="index,follow" />
   <meta name="color-scheme" content="light" />
   <meta name="theme-color" content="#1e40af" />
 
-  <!-- Canonical / Sharing URLs -->
-  <link rel="canonical" href="https://github.com/wsaal68/dienstorbit" />
-  <meta property="og:url" content="https://github.com/wsaal68/dienstorbit" />
-  <meta name="twitter:url" content="https://github.com/wsaal68/dienstorbit" />
-
-  <!-- Open Graph -->
-  <meta property="og:locale" content="de_DE" />
-  <meta property="og:site_name" content="DienstOrbit" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="DienstOrbit – Dienstplan-Generator" />
-  <meta property="og:description" content="Dienstreihen im Orbit: smart planen, sauber exportieren. DienstOrbit berücksichtigt Ferien & Feiertage nach Bundesland und exportiert als CSV, PDF, ICS & Excel." />
-  <meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='12' y='18' width='40' height='34' rx='6' ry='6' fill='white' stroke='%231e40af' stroke-width='3'/%3E%3Ccircle cx='32' cy='35' r='12' fill='none' stroke='%231e40af' stroke-width='3'/%3E%3Ccircle cx='44' cy='27' r='3' fill='%231e40af'/%3E%3C/svg%3E" />
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="DienstOrbit – Dienstplan-Generator" />
-  <meta name="twitter:description" content="Dienstreihen im Orbit: smart planen, sauber exportieren. DienstOrbit berücksichtigt Ferien & Feiertage nach Bundesland und exportiert als CSV, PDF, ICS & Excel." />
-  <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='12' y='18' width='40' height='34' rx='6' ry='6' fill='white' stroke='%231e40af' stroke-width='3'/%3E%3Ccircle cx='32' cy='35' r='12' fill='none' stroke='%231e40af' stroke-width='3'/%3E%3Ccircle cx='44' cy='27' r='3' fill='%231e40af'/%3E%3C/svg%3E" />
-
-  <!-- PWA-ish niceties -->
-  <meta name="apple-mobile-web-app-title" content="DienstOrbit" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-
-  <!-- Favicon (Data-URI, bleibt standalone) -->
-  <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='12' y='18' width='40' height='34' rx='6' ry='6' fill='white' stroke='%231e40af' stroke-width='3'/%3E%3Ccircle cx='32' cy='35' r='12' fill='none' stroke='%231e40af' stroke-width='3'/%3E%3Ccircle cx='44' cy='27' r='3' fill='%231e40af'/%3E%3C/svg%3E" />
-
-  <!-- Tailwind -->
+  <!-- Tailwind (CDN) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
 
-  <!-- Styles (bestehend + kleinere Ergänzungen) -->
   <style>
     .error-msg { color:#dc2626;font-size:.8rem;margin-top:.25rem;display:none; }
-    .hint-msg  { color:#6b7280;font-size:.55rem;margin-top:.15rem; }
+    .hint-msg  { color:#6b7280;font-size:.7rem;margin-top:.25rem; }
     .feiertag-row { background-color:#fff8dc; }
     .auto-badge{ margin-left:8px;font-size:.70rem;background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:9999px;vertical-align:middle; }
     .disabled-btn{ opacity:.5;cursor:not-allowed; }
@@ -56,63 +26,146 @@
     footer{ border:1px solid #e5e7eb;background:#f9fafb;border-radius:.75rem;padding:.75rem 1rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-top:.75rem;color:#3967a8;text-align:center;font-size:.675rem; }
     footer a{ color:inherit;text-decoration:underline; }
 
+    /* Fallback-Sichtbarkeit sicherstellen */
+    .logo-fallback.hidden { display: none !important; }
+    .app-logo .hidden { display: none !important; }
+
+    /* === App-Header === */
+    .app-header{
+      border:1px solid #e5e7eb; border-radius:1rem;
+      padding:1rem 1.25rem; margin-bottom:.75rem;
+      background: linear-gradient(135deg,#eff6ff 0%,#ffffff 65%);
+      box-shadow: 0 10px 24px rgba(30,64,175,.08), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .app-header-inner{
+      display:grid; grid-template-columns:auto 1fr; gap:1rem; align-items:center;
+    }
+    .app-logo{ position:relative; }
+    .logo-img{
+      display:block;
+      max-height:64px; width:auto; height:auto; object-fit:contain;
+    }
+    .logo-fallback{
+      display:flex; align-items:center; justify-content:center;
+      height:64px; width:64px; border-radius:14px;
+      background:#1e40af; color:#fff; font-weight:800; font-size:1.25rem;
+      box-shadow:0 6px 16px rgba(30,64,175,.25);
+    }
+    .app-title{ margin:0; font-size:clamp(1.25rem,2.1vw + .6rem,2rem); line-height:1.1; font-weight:900; color:#1e40af; }
+    .app-subtitle{ margin-top:.15rem; font-weight:700; color:#1e40af; }
+    .app-subline{ margin-top:.15rem; font-size:.80rem; color:#374151; }
+
+    @media (min-width:768px){
+      .app-header-inner{ grid-template-columns:auto 1fr; gap:1.25rem; }
+      .logo-fallback{ height:80px; width:80px; }
+      .logo-img{ max-height:80px; width:auto; height:auto; object-fit:contain; }
+    }
+
+    /* Collapsible */
     .chevron{ transition: transform .2s ease; }
     .chevron[aria-expanded="true"]{ transform: rotate(180deg); }
-
     .collapsible { overflow: hidden; transition: max-height .26s ease, opacity .26s ease; opacity: 0; max-height: 0; will-change: max-height, opacity; }
     .collapsible.open { opacity: 1; }
     @media (prefers-reduced-motion: reduce) { .collapsible { transition: none; } }
 
+    /* Fehlerfelder */
     .error-field { border-color:#ef4444 !important; box-shadow: 0 0 0 1px rgba(239,68,68,.35) inset; }
     .error-field:focus { outline: none; box-shadow: 0 0 0 2px rgba(239,68,68,.45) inset; }
 
     /* Floating Buttons */
-    .float-btn {
-      position: fixed;
-      right: calc(1.25rem + env(safe-area-inset-right, 0));
-      z-index: 70;
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-      transition: opacity .2s ease, transform .2s ease;
-    }
+    .float-btn { position: fixed; right: 1.25rem; z-index: 70; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
     .float-btn.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .to-top     { bottom: calc(1.25rem + env(safe-area-inset-bottom, 0)); }
-    .to-export  { bottom: calc(1.25rem + env(safe-area-inset-bottom, 0)); right: calc(5.75rem + env(safe-area-inset-right, 0)); } /* links neben Top */
-    .to-results { bottom: calc(8.25rem + env(safe-area-inset-bottom, 0)); } /* über Export & Top */
+    .to-top     { bottom: 1.25rem; }
+    .to-export  { bottom: 1.25rem; right: 6rem; }
+    .to-results { bottom: 8.25rem; }
     @media (prefers-reduced-motion: reduce) { .float-btn { transition: none; } }
-  </style>
 
-  <!-- JSON-LD (strukturierte Daten) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "DienstOrbit",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web",
-    "url": "https://github.com/wsaal68/dienstorbit",
-    "description": "Dienstreihen im Orbit: smart planen, sauber exportieren. DienstOrbit ist ein Dienstplan-Generator mit Berücksichtigung von Ferien & Feiertagen nach Bundesland. Export: CSV, PDF, ICS und Excel.",
-    "creator": { "@type": "Person", "name": "Wolfgang Saal" },
-    "license": "https://opensource.org/licenses/MIT",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-    "sameAs": ["https://github.com/wsaal68/dienstorbit"]
-  }
-  </script>
+    /* === Ergebnis-Tabelle: Card + Optik === */
+    .table-card{
+      border:1px solid #e5e7eb; border-radius:0.75rem;
+      background:#fff; overflow:hidden;
+      box-shadow: 0 6px 24px rgba(17,24,39,.06);
+    }
+
+    #ergebnisTabelle{ border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; width:100%; }
+    #ergebnisTabelle th, #ergebnisTabelle td{ border-color:#e5e7eb; }
+
+    /* Sticky-Header */
+    #ergebnisTabelle thead th{
+      position: sticky; top: 0; z-index: 1;
+      background: linear-gradient(180deg, #eff6ff 0%, #eaf2ff 100%);
+      color:#1e3a8a;
+      box-shadow: inset 0 -1px 0 #e5e7eb;
+    }
+
+    /* Zebra + Hover */
+    #ergebnisTabelle tbody tr:nth-child(even):not(.feiertag-row){ background:#f9fafb; }
+    #ergebnisTabelle tbody tr:hover{ background:#eef2ff; }
+
+    /* linke Akzentlinie */
+    #ergebnisTabelle tbody tr.wknd td:first-child{ box-shadow: inset 4px 0 0 #e5e7eb; }
+    #ergebnisTabelle tbody tr.feiertag-row td:first-child{ box-shadow: inset 4px 0 0 #f59e0b; }
+
+    @media (min-width: 768px){
+      #ergebnisTabelle th, #ergebnisTabelle td{ padding-top: .6rem; padding-bottom: .6rem; }
+    }
+
+    /* kleine Status-Badges */
+    .chip{ display:inline-block; margin-left:.5rem; padding:2px 8px; font-size:.65rem; line-height:1; border-radius:9999px; vertical-align:middle; border:1px solid transparent; }
+    .chip-cancel{ background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+    .chip-info{   background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+
+    /* Toolbar + Sortierung + No-Results */
+    .table-toolbar{
+      display:flex; gap:.75rem; align-items:center; justify-content:space-between;
+      padding:.6rem .9rem; border-bottom:1px solid #e5e7eb; background:#f8fafc;
+    }
+    .table-toolbar.hidden{ display:none; }
+    .table-toolbar .left, .table-toolbar .right{
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .table-toolbar .left{ flex:1 1 auto; flex-wrap:nowrap; }
+    .table-search{
+      appearance:none; border:1px solid #d1d5db; background:#fff; color:#111827;
+      border-radius:.5rem; padding:.5rem .75rem; font-size:.9rem;
+      flex: 1 1 18rem; min-width:12rem; max-width:30rem;
+    }
+    .table-search:focus{ outline:2px solid #93c5fd; outline-offset:1px; border-color:#60a5fa; }
+    .table-count{ font-size:.8rem; color:#6b7280; white-space:nowrap; }
+
+    #ergebnisTabelle thead th.sortable{ cursor:pointer; user-select:none; position:sticky; top:0; z-index:2; padding-right:1.25rem; }
+    #ergebnisTabelle thead th .sort-ind{
+      position:absolute; right:.5rem; top:50%; transform:translateY(-50%) rotate(0deg);
+      font-size:.85rem; color:#64748b; opacity:.7; transition:transform .15s ease, opacity .15s ease;
+    }
+    #ergebnisTabelle thead th.sorted-asc  .sort-ind{ transform:translateY(-50%) rotate(180deg); opacity:1; }
+    #ergebnisTabelle thead th.sorted-desc .sort-ind{ transform:translateY(-50%) rotate(0deg);   opacity:1; }
+    #ergebnisTabelle thead th.sorted-asc, #ergebnisTabelle thead th.sorted-desc{ color:#0f2167; }
+
+    .row-hidden{ display:none; }
+    .no-results{
+      padding:1rem 1.25rem; color:#6b7280; font-size:.9rem; text-align:center;
+      border-top:1px dashed #e5e7eb; background:#fafafa;
+    }
+  </style>
 </head>
 <body class="bg-gradient-to-tr from-blue-50 to-blue-100 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl p-8 space-y-8">
-    <h1 id="pageTop" class="text-3xl font-extrabold text-blue-700 text-center">DienstOrbit</h1>
 
-    <!-- Slogan + Unterzeile -->
-    <h4 class="text-center leading-snug">
-      <span class="block font-semibold text-blue-700">
-        Dienstreihen im Orbit: smart planen, sauber exportieren
-      </span>
-      <span class="block text-gray-700 mt-1">
-        <strong>DienstOrbit</strong> ist ein Dienstplan-Generator mit Berücksichtigung von Ferien und Feiertagen nach Bundesland
-      </span>
-    </h4>
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <header class="app-header" role="banner" aria-label="DienstOrbit">
+      <div class="app-header-inner">
+        <div class="app-logo">
+          <img id="brandLogo" alt="DienstOrbit Logo" class="logo-img hidden" />
+          <div id="brandFallback" class="logo-fallback" aria-hidden="true">DO</div>
+        </div>
+        <div class="app-titlewrap">
+          <h1 id="pageTop" class="app-title sr-only">DienstOrbit – Dienstplan-Generator</h1>
+          <p class="app-subtitle">Dienstpläne im Orbit: smart planen, sauber exportieren</p>
+          <p class="app-subline">Dienstplan-Generator mit Berücksichtigung von Ferien &amp; Feiertagen und diversen Export-Modulen.</p>
+        </div>
+      </div>
+    </header>
 
     <!-- Allgemeine Angaben -->
     <div class="space-y-4 border border-gray-200 rounded-xl bg-gray-50 p-4 shadow-sm">
@@ -124,7 +177,7 @@
       </label>
 
       <div class="flex flex-col md:flex-row md:items-center md:gap-6">
-        <label class="block w-full font-medium">Bundesland des Ortsverband:
+        <label class="block w-full font-medium">Bundesland zur Ferien- und Feiertagsermittlung:
           <select id="bundesland" class="w-full border border-blue-200 rounded-lg px-3 py-2 mt-1" aria-describedby="error_bundesland">
             <option value="">Bitte wählen</option>
             <option value="BW">Baden-Württemberg</option><option value="BY">Bayern</option>
@@ -136,7 +189,7 @@
             <option value="SN">Sachsen</option><option value="ST">Sachsen-Anhalt</option>
             <option value="SH">Schleswig-Holstein</option><option value="TH">Thüringen</option>
           </select>
-          <p id="error_bundesland" class="error-msg">Bitte wählen Sie ein Bundesland aus. Wird für die Feiertags- & Ferien-Ermittlung benötigt.</p>
+          <p id="error_bundesland" class="error-msg">Bitte wählen Sie ein Bundesland aus. Wird für die Feiertags- &amp; Ferien-Ermittlung benötigt.</p>
         </label>
 
         <div class="flex gap-6 items-center mt-4 md:mt-7">
@@ -145,7 +198,7 @@
             <span class="ml-2 text-sm text-gray-700">Dienst an Feiertagen</span>
           </label>
           <label class="inline-flex items-center">
-            <input type="checkbox" id="ferienCheck" class="form-checkbox h-5 w-5 text-blue-600"/>
+            <input type="checkbox" id="ferienCheck" class="form-checkbox h-5 w-5 text-blue-600" checked/>
             <span class="ml-2 text-sm text-gray-700">Dienst in Ferien</span>
           </label>
         </div>
@@ -159,30 +212,40 @@
       </label>
 
       <p id="global_date_hint" class="hint-msg"></p>
+      <p id="ferien_hint" class="hint-msg hidden"></p>
     </div>
 
-    <div id="terminreihen-container" class="space-y-8 mt-6"></div>
+    <!-- Terminreihen -->
+    <div id="terminreihen-container" class="space-y-8 mt-4"></div>
 
-    <div class="flex flex-wrap gap-4 mt-6 justify-center">
+    <!-- Aktionen -->
+    <div class="flex flex-wrap gap-4 justify-center pt-6 md:pt-5">
       <button id="btnBerechnen" class="bg-blue-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-blue-700">Termine ermitteln</button>
       <button id="btnReset" class="bg-red-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-red-700">Reset Termine</button>
     </div>
 
-    <!-- Export-Buttons (mit Anker) -->
-    <div id="exportButtons" class="flex flex-wrap gap-4 mt-4 justify-center">
+    <!-- Exporte -->
+    <div id="exportButtons" class="flex flex-wrap gap-4 justify-center pt-8 md:pt-5 pb-8 md:pb-5">
       <button id="btnCsv"  class="bg-green-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-green-700 disabled-btn"  disabled>Export als CSV</button>
       <button id="btnPdf"  class="bg-yellow-500 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-yellow-600 disabled-btn" disabled>Export als PDF</button>
       <button id="btnIcs"  class="bg-purple-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-purple-700 disabled-btn" disabled>Export als ICS</button>
-      <button id="btnXlsx" class="bg-indigo-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-indigo-700 disabled-btn" disabled>Export als Excel (.xlsx)</button>
+      <button id="btnXlsx" class="bg-indigo-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-indigo-700 disabled-btn" disabled>Export als Excel</button>
     </div>
 
-    <!-- Divider + Titel (nur bei Ergebnissen) -->
-    <div id="ergebnisDivider" class="hidden my-6">
-      <div class="border-t border-gray-300"></div>
-    </div>
+    <!-- Ergebnis -->
+    <div id="ergebnisDivider" class="hidden my-4"><div class="border-t border-gray-300"></div></div>
     <h2 id="ergebnisTitel" class="hidden text-lg font-extrabold text-blue-700" tabindex="-1">Ergebnistabelle</h2>
 
-    <div class="mt-2">
+    <div class="mt-2 table-card">
+      <!-- Toolbar jetzt initial versteckt -->
+      <div class="table-toolbar hidden" id="tableToolbar">
+        <div class="left">
+          <input id="tableSearch" class="table-search" type="search" placeholder="Suchen… (Datum, Tag, Dienst, Hinweis)" aria-label="Tabelle durchsuchen">
+          <button id="tableSearchClear" type="button" class="px-2 py-1 border rounded text-sm hover:bg-gray-50" title="Suche leeren">Reset Suche</button>
+          <span id="tableCount" class="table-count"></span>
+        </div>
+        <div class="right"></div>
+      </div>
       <table class="min-w-full table-auto hidden" id="ergebnisTabelle">
         <thead>
           <tr class="bg-blue-100">
@@ -195,298 +258,200 @@
         </thead>
         <tbody id="tabelleBody"></tbody>
       </table>
-    </div>
-
-    <!-- Hinweise & Legende -->
+    </div>  
+      
+    <!-- Hinweise -->
     <div class="legend-box" role="note">
-      <button id="toggleHinweise"
-              class="w-full flex items-center justify-between gap-4"
-              aria-expanded="false" aria-controls="hinweisePanel" type="button">
+      <button id="toggleHinweise" class="w-full flex items-center justify-between gap-4" aria-expanded="false" aria-controls="hinweisePanel" type="button">
         <span class="text-sm font-semibold text-blue-700">Hinweise &amp; Legende anzeigen</span>
-        <svg class="chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <svg class="chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
       <div id="hinweisePanel" class="mt-2 collapsible">
         <div class="mt-1">
-          <span class="auto-badge">⚡ auto</span> = automatische Vorschlagswerte.
+          <span class="auto-badge">⚡ auto</span> = Vorschlagswerte:
           <em>Zeit:</em> Mo–Fr <strong>19:00–22:30</strong>, Sa–So <strong>07:30–17:00</strong>.
-          <em>Datums:</em> <strong>01.01.</strong> und <strong>31.12.</strong> des aktuellen Jahres.
+          <em>Datum:</em> <strong>01.01.</strong> und <strong>31.12.</strong> des aktuellen Jahres.
         </div><br>
         <strong>Hinweise:</strong>
         <ul class="list-disc pl-5 mt-1 space-y-1">
-          <li>Die <em>Zeit-Defaults</em> (Mo–Fr <strong>19:00–22:30</strong>, Sa–So <strong>07:30–17:00</strong>) werden bei Auswahl des Wochentags ermittelt.</li>
-          <li>Die <em>Datum-Defaults</em> (<strong>01.01.</strong> und <strong>31.12.</strong> des aktuellen Jahres) werden vorbelegt.</li>
+          <li>Die Zeit-Defaults werden bei Auswahl des Wochentags ermittelt.</li>
+          <li>Die Datum-Defaults (<strong>01.01.</strong> und <strong>31.12.</strong> des aktuellen Jahres) werden immer vorbelegt.</li>
           <li>Bei manueller Eingabe verschwindet das <span class="auto-badge">⚡ auto</span>-Badge.</li>
-          <li>Der Button <em><strong>Reset Termine</strong></em> setzt die Eingaben bei den Terminreihen auf Default und löscht die Ausgabetabelle.</li>
-          <li>Die Export-Buttons sind erst nach Ermittlung der Termine aktiviert (Button <em><strong>Termine ermitteln</strong></em>).</li>
-          <li><em>Ferien-Logik:</em> Ist „Dienst in Ferien“ deaktiviert, werden Termine mit <strong>Entfällt</strong> markiert; in <strong>Hinweis</strong> steht der Ferienname. Beim ICS-Export erhält der Termin den Status <strong>Abgesagt</strong>.</li>
-          <li><em>Feiertag-Logik:</em> Feiertage werden immer angezeigt. Ist „Dienst an Feiertagen“ deaktiviert, werden Termine mit <strong>Entfällt</strong> markiert; beim ICS-Export <strong>Abgesagt</strong>.</li>
+          <li><strong>Reset Termine</strong> setzt Eingaben auf Default und leert die Tabelle.</li>
+          <li>Die Export-Buttons sind erst nach <strong>Termine ermitteln</strong> aktiv.</li>
+          <li><em>Ferien-Logik:</em> Ist <strong>Dienst in Ferien</strong> deaktiviert, werden Termine mit <strong>Entfällt</strong> markiert; im Feld <strong>Hinweis</strong> steht der Ferienname; Beim ICS-Export ist der Termin dann zwar enthalten, aber <strong>abgesagt</strong>.</li>
+          <li><em>Feiertag-Logik:</em> Ist <strong>Dienst an Feiertagen</strong> deaktiviert, werden Termine mit <strong>Entfällt</strong> markiert; Beim ICS-Export ist der Termin dann zwar enthalten, aber <strong>abgesagt</strong>.</li>
           <li><em>Gültiger Datumsbereich:</em> Aktuelles Jahr − 2 bis aktuelles Jahr + 4.</li>
-          <li>Zur Ausführung ist eine Internetverbindung erforderlich.</li>
-          <li><em>Datenquelle Feiertage &amp; Ferien</em>: via <strong>OpenHolidaysAPI</strong>.</li>
+          <li>Zur Ausführung der Anwendung ist eine Internetverbindung erforderlich.</li>
+          <li><em>Datenquelle für Ferien und Feiertage: </em> <a href="https://www.openholidaysapi.org" target="_blank" rel="noopener">OpenHolidaysAPI.</a></li>
         </ul>
       </div>
     </div>
 
     <footer>
       © 2025 · Wolfgang Saal, Böllenborn · August 2025<br>
-      Die Nutzung ist frei, solange der Urheber genannt wird (<a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT-Lizenz</a>).
-      Download unter <a href="https://github.com/wsaal68/dienstorbit" target="_blank" rel="noopener">github.com/wsaal68/dienstorbit</a>.
+      MIT-Lizenz. Download: <a href="https://github.com/wsaal68/dienstorbit" target="_blank" rel="noopener">github.com/wsaal68/dienstorbit</a>.
     </footer>
-  </div>
+
+  </div><!-- /max-w wrapper -->
 
   <!-- Floating Buttons -->
-  <button id="btnToResults"
-          type="button"
-          class="float-btn to-results rounded-full bg-white text-blue-700 border border-blue-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 px-4 py-2"
-          aria-label="Zur Ergebnistabelle"
-          title="Zur Ergebnistabelle">
-    Zur Tabelle
-  </button>
-
-  <button id="btnToExport"
-          type="button"
-          class="float-btn to-export rounded-full bg-white text-blue-700 border border-blue-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 px-4 py-2"
-          aria-label="Zu den Export-Buttons"
-          title="Zu den Export-Buttons">
-    Zum Export
-  </button>
-
-  <button id="btnToTop"
-          type="button"
-          class="float-btn to-top rounded-full bg-blue-600 text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 px-4 py-3"
-          aria-label="Nach oben"
-          title="Nach oben">
-    <span class="sr-only">Nach oben</span>
-    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 4l6 6M10 4L4 10M10 4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+  <button id="btnToResults" type="button" class="float-btn to-results rounded-full bg-white text-blue-700 border border-blue-200 shadow-lg px-4 py-2" title="Zur Ergebnistabelle">Zur Tabelle</button>
+  <button id="btnToExport"  type="button" class="float-btn to-export  rounded-full bg-white text-blue-700 border border-blue-200 shadow-lg px-4 py-2" title="Zu den Export-Buttons">Zum Export</button>
+  <button id="btnToTop"     type="button" class="float-btn to-top     rounded-full bg-blue-600 text-white shadow-lg px-4 py-3" title="Nach oben">
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4l6 6M10 4L4 10M10 4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
 
   <script>
-/* ===== Utils ===== */
-const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* ========= Basics ========= */
 const $ = sel => document.querySelector(sel);
-function isInViewport(el, offset=0){
-  if (!el) return false;
-  const r = el.getBoundingClientRect();
-  const vh = window.innerHeight || document.documentElement.clientHeight;
-  return r.top >= 0 - offset && r.bottom <= vh + offset;
-}
-function mostlyInViewport(el){
-  if (!el) return false;
-  const r = el.getBoundingClientRect();
-  const vh = window.innerHeight || document.documentElement.clientHeight;
-  const visible = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
-  return visible >= (r.height * 0.6);
-}
-function safeParseInt(v, def){ const n = parseInt(v,10); return Number.isFinite(n) ? n : def; }
+const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ===== Fehlerdarstellung ===== */
-function getOrCreateErrorEl(input){
-  const label = input.closest('label') || input.parentElement || input;
-  let p = label.querySelector('.error-msg');
-  if (!p) { p = document.createElement('p'); p.className = 'error-msg'; label.appendChild(p); }
-  return p;
+/* ========= Brand-Logo ========= */
+const BRAND_CANDIDATES = [
+  'logo_dienstorbit.png','DienstOrbit Schriftzug schmal.png','DienstOrbit Schriftzug.png',
+  'DienstOrbit Logo.png','logo.png','dienstorbit.png'
+];
+window.brandLogoDataUrl = null; let brandNatural = {w:0, h:0};
+function tryLoadImage(src){ return new Promise(resolve=>{ const img=new Image(); img.onload=()=>resolve(img); img.onerror=()=>resolve(null); img.src=src+(src.includes('?')?'&':'?')+'cb='+Date.now(); }); }
+function blobToDataURL(blob){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(blob); }); }
+async function srcToDataURL(src){
+  try{ const res=await fetch(src,{cache:'no-store'}); if(res.ok){ const b=await res.blob(); const d=await blobToDataURL(b); if(typeof d==='string'&&d.startsWith('data:')) return d; } }catch(_){}
+  return new Promise(resolve=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>{ try{ const c=document.createElement('canvas'); c.width=i.naturalWidth||i.width; c.height=i.naturalHeight||i.height; c.getContext('2d').drawImage(i,0,0); resolve(c.toDataURL('image/png')); }catch(e){ resolve(null);} }; i.onerror=()=>resolve(null); i.src=src+(src.includes('?')?'&':'?')+'cb='+Date.now(); });
 }
-function setFieldError(input, msg){
-  if (!input) return;
-  input.classList.add('error-field');
-  input.setAttribute('aria-invalid','true');
-  const p = getOrCreateErrorEl(input);
-  p.textContent = msg || 'Pflichtfeld';
-  p.style.display = 'block';
-}
-function clearFieldError(input){
-  if (!input) return;
-  input.classList.remove('error-field');
-  input.removeAttribute('aria-invalid');
-  const label = input.closest('label') || input.parentElement || input;
-  const p = label.querySelector('.error-msg');
-  if (p){ p.style.display = 'none'; p.textContent = ''; }
+async function setupBrand(){
+  const imgEl=$('#brandLogo'), fallbackEl=$('#brandFallback');
+  for(const cand of BRAND_CANDIDATES){
+    const ok=await tryLoadImage(cand); if(!ok) continue;
+    fallbackEl?.classList.add('hidden'); fallbackEl?.style.setProperty('display','none','important');
+    imgEl.src=ok.src; imgEl.classList.remove('hidden');
+    brandNatural={ w: ok.naturalWidth||ok.width, h: ok.naturalHeight||ok.height };
+    window.brandLogoDataUrl=await srcToDataURL(ok.src);
+    break;
+  }
+  if(!imgEl.src){ fallbackEl?.classList.remove('hidden'); }
 }
 
-/* ===== Datumsbereich ===== */
-function getYearBounds() {
-  const y = new Date().getFullYear();
-  const minYear = y - 2, maxYear = y + 4;
-  return { minYear, maxYear, minDateStr:`${minYear}-01-01`, maxDateStr:`${maxYear}-12-31` };
-}
-function applyDateBounds(scope){
-  const {minDateStr, maxDateStr} = getYearBounds();
-  const root = scope && scope.querySelectorAll ? scope : document;
-  root.querySelectorAll('.dienst_start, .dienst_ende').forEach(inp => {
-    inp.setAttribute('min', minDateStr);
-    inp.setAttribute('max', maxDateStr);
-  });
-}
-function updateDateHints(scope){
-  const {minYear, maxYear} = getYearBounds();
-  const root = scope && scope.querySelectorAll ? scope : document;
-  root.querySelectorAll('.terminreihe').forEach(reihe => {
-    const s = reihe.querySelector('.dienst_start'), e = reihe.querySelector('.dienst_ende');
-    [s,e].forEach(inp=>{
-      const lbl = inp ? (inp.closest('label') || reihe) : null;
-      if (!lbl) return;
-      let hint = lbl.querySelector('.date-hint');
-      if (!hint){ hint = document.createElement('p'); hint.className='hint-msg date-hint'; lbl.appendChild(hint); }
-      hint.textContent = `Erlaubt: 01.01.${minYear} bis 31.12.${maxYear}`;
-    });
-  });
-  const g = $('#global_date_hint');
-  if (g) g.textContent = `Gültiger Datumsbereich für Start-/Enddatum: 01.01.${minYear} bis 31.12.${maxYear}.`;
+/* ========= UI-Helfer ========= */
+function getYearBounds(){ const y=new Date().getFullYear(); return { minYear:y-2, maxYear:y+4, minDateStr:`${y-2}-01-01`, maxDateStr:`${y+4}-12-31` }; }
+function applyDateBounds(scope){ const {minDateStr,maxDateStr}=getYearBounds(); (scope||document).querySelectorAll('.dienst_start, .dienst_ende').forEach(inp=>{ inp.setAttribute('min',minDateStr); inp.setAttribute('max',maxDateStr); }); }
+function updateGlobalHints(){
+  const {minYear,maxYear}=getYearBounds(); const ferienOff=!$('#ferienCheck').checked;
+  const base=`Gültiger Datumsbereich für Start-/Enddatum: 01.01.${minYear} bis 31.12.${maxYear}.`;
+  const extra = ferienOff ? ' „Dienst in Ferien“ ist deaktiviert (also kein Dienst in den Ferien... z.B. bei den Jugend-Diensten) – Termine werden in der Ausgabetabelle als "Abgesagt" eingetragen. In der Spalte "Hinweise" werden die Ferien aufgeführt.' : ' „Dienst in Ferien“ ist aktiviert (also findet Dienst in den Ferien statt) – Termine werden in der Ausgabetabelle ohne weiteren Hinweis auf die Ferien aufgenommen.';
+  $('#global_date_hint').textContent = base + extra;
 }
 
-/* ===== Terminreihen-UI ===== */
-function createTerminreihe(index) {
-  const jahr = new Date().getFullYear();
-  const startDefault = `${jahr}-01-01`;
-  const endDefault   = `${jahr}-12-31`;
-  const {minDateStr, maxDateStr} = getYearBounds();
+/* ========= Terminreihen ========= */
+function createTerminreihe(index){
+  const y=new Date().getFullYear(); const {minDateStr,maxDateStr}=getYearBounds();
   return `
-    <div class="border p-4 rounded-xl bg-blue-50 space-y-3 terminreihe">
-      <h3 class="text-xl font-extrabold text-blue-700 uppercase">Terminreihe ${index}</h3>
-      <label class="block font-medium">Bezeichnung:
-        <input type="text" class="dienst_bezeichnung w-full border rounded px-3 py-2">
-        <p class="error-msg">Bitte eine Bezeichnung eingeben.</p>
+  <div class="border p-4 rounded-xl bg-blue-50 space-y-3 terminreihe">
+    <h3 class="text-xl font-extrabold text-blue-700 uppercase">Terminreihe ${index}</h3>
+    <label class="block font-medium">Bezeichnung:
+      <input type="text" class="dienst_bezeichnung w-full border rounded px-3 py-2">
+      <span class="error-msg">Bitte eine Bezeichnung eingeben.</span>
+    </label>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <label class="block font-medium">Wochentag:
+        <select class="dienst_wochentag w-full border rounded px-3 py-2">
+          <option value="">Bitte wählen</option>
+          <option>Montag</option><option>Dienstag</option><option>Mittwoch</option>
+          <option>Donnerstag</option><option>Freitag</option><option>Samstag</option><option>Sonntag</option>
+        </select>
+        <span class="error-msg">Bitte einen Wochentag wählen.</span>
       </label>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <label class="block font-medium">Wochentag:
-          <select class="dienst_wochentag w-full border rounded px-3 py-2">
-            <option value="">Bitte wählen</option>
-            <option value="Montag">Montag</option><option value="Dienstag">Dienstag</option>
-            <option value="Mittwoch">Mittwoch</option><option value="Donnerstag">Donnerstag</option>
-            <option value="Freitag">Freitag</option><option value="Samstag">Samstag</option>
-            <option value="Sonntag">Sonntag</option>
-          </select>
-          <p class="error-msg">Bitte einen Wochentag wählen.</p>
-        </label>
-        <label class="block font-medium">Turnus:
-          <select class="dienst_turnus w-full border rounded px-3 py-2">
-            <option value="woechentlich">Wöchentlich</option>
-            <option value="2woechentlich">Zweiwöchentlich</option>
-            <option value="monatlich">Monatlich</option>
-          </select>
-          <p class="error-msg">Bitte einen Turnus wählen.</p>
-        </label>
-        <label class="block font-medium monatlich-option hidden">Position im Monat:
-          <select class="dienst_monat_position w-full border rounded px-3 py-2" disabled>
-            <option value="1">Erster</option><option value="2">Zweiter</option>
-            <option value="3">Dritter</option><option value="4">Vierter</option>
-            <option value="-1">Letzter</option>
-          </select>
-          <p class="error-msg">Bitte die Position im Monat wählen.</p>
-        </label>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label class="block font-medium">Startdatum:
-          <input type="date" class="dienst_start w-full border rounded px-3 py-2" value="${startDefault}" min="${minDateStr}" max="${maxDateStr}">
-          <p class="error-msg">Bitte ein Startdatum wählen.</p>
-        </label>
-        <label class="block font-medium">Enddatum:
-          <input type="date" class="dienst_ende w-full border rounded px-3 py-2" value="${endDefault}" min="${minDateStr}" max="${maxDateStr}">
-          <p class="error-msg">Bitte ein Enddatum wählen.</p>
-        </label>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label class="block font-medium">Startzeit:
-          <input type="time" class="dienst_startzeit w-full border rounded px-3 py-2">
-          <p class="error-msg">Bitte eine Startzeit angeben.</p>
-        </label>
-        <label class="block font-medium">Endzeit:
-          <input type="time" class="dienst_endzeit w-full border rounded px-3 py-2">
-          <p class="error-msg">Bitte eine Endzeit angeben.</p>
-        </label>
-      </div>
-    </div>`;
+      <label class="block font-medium">Turnus:
+        <select class="dienst_turnus w-full border rounded px-3 py-2">
+          <option value="woechentlich">Wöchentlich</option>
+          <option value="2woechentlich">Zweiwöchentlich</option>
+          <option value="monatlich">Monatlich</option>
+        </select>
+        <span class="error-msg">Bitte einen Turnus wählen.</span>
+      </label>
+      <label class="block font-medium monatlich-option hidden">Position im Monat:
+        <select class="dienst_monat_position w-full border rounded px-3 py-2" disabled>
+          <option value="1">Erster</option><option value="2">Zweiter</option>
+          <option value="3">Dritter</option><option value="4">Vierter</option>
+          <option value="-1">Letzter</option>
+        </select>
+        <span class="error-msg">Bitte die Position im Monat wählen.</span>
+      </label>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <label class="block font-medium">Startdatum:
+        <input type="date" class="dienst_start w-full border rounded px-3 py-2" value="${y}-01-01" min="${minDateStr}" max="${maxDateStr}">
+        <span class="error-msg">Bitte ein Startdatum wählen.</span>
+      </label>
+      <label class="block font-medium">Enddatum:
+        <input type="date" class="dienst_ende w-full border rounded px-3 py-2" value="${y}-12-31" min="${minDateStr}" max="${maxDateStr}">
+        <span class="error-msg">Bitte ein Enddatum wählen.</span>
+      </label>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <label class="block font-medium">Startzeit:
+        <input type="time" class="dienst_startzeit w-full border rounded px-3 py-2">
+        <span class="error-msg">Bitte eine Startzeit angeben.</span>
+      </label>
+      <label class="block font-medium">Endzeit:
+        <input type="time" class="dienst_endzeit w-full border rounded px-3 py-2">
+        <span class="error-msg">Bitte eine Endzeit angeben.</span>
+      </label>
+    </div>
+  </div>`;
 }
-
-function updateTerminreihen(opts = {}) {
-  const container = $('#terminreihen-container');
-  if (!container) return;
-
-  const fresh = !!(opts && opts.fresh);
-  const snapshot = fresh ? [] : Array.from(container.querySelectorAll('.terminreihe')).map(reihe => {
-    const q = sel => reihe.querySelector(sel);
-    const v = sel => q(sel)?.value || '';
+function safeParseInt(v,def){ const n=parseInt(v,10); return Number.isFinite(n)?n:def; }
+function updateTerminreihen(opts={}){
+  const container=$('#terminreihen-container'); const fresh=!!opts.fresh;
+  const snapshot = fresh? [] : Array.from(container.querySelectorAll('.terminreihe')).map(reihe=>{
+    const q=s=>reihe.querySelector(s), v=s=>q(s)?.value || '';
     return {
-      bezeichnung: v('.dienst_bezeichnung'),
-      wochentag: v('.dienst_wochentag'),
-      turnus: v('.dienst_turnus') || 'woechentlich',
-      monatPos: v('.dienst_monat_position'),
-      start: v('.dienst_start'),
-      ende: v('.dienst_ende'),
-      startzeit: v('.dienst_startzeit'),
-      endzeit: v('.dienst_endzeit'),
-      startzeitManual: q('.dienst_startzeit')?.dataset.manual === '1',
-      endzeitManual: q('.dienst_endzeit')?.dataset.manual === '1',
-      startDateManual: q('.dienst_start')?.dataset.manual === '1',
-      endDateManual:   q('.dienst_ende')?.dataset.manual === '1'
+      bezeichnung:v('.dienst_bezeichnung'), wochentag:v('.dienst_wochentag'), turnus:v('.dienst_turnus')||'woechentlich',
+      monatPos:v('.dienst_monat_position'), start:v('.dienst_start'), ende:v('.dienst_ende'),
+      startzeit:v('.dienst_startzeit'), endzeit:v('.dienst_endzeit'),
+      startzeitManual:q('.dienst_startzeit')?.dataset.manual==='1', endzeitManual:q('.dienst_endzeit')?.dataset.manual==='1',
+      startDateManual:q('.dienst_start')?.dataset.manual==='1', endDateManual:q('.dienst_ende')?.dataset.manual==='1'
     };
   });
+  container.innerHTML=''; const count=Math.min(Math.max(safeParseInt($('#anzahl_reihen')?.value,1),1),5);
+  for(let i=1;i<=count;i++) container.insertAdjacentHTML('beforeend', createTerminreihe(i));
 
-  container.innerHTML = '';
-  const sel = $('#anzahl_reihen');
-  const count = safeParseInt(sel?.value, 1);
-  const clamped = Math.min(Math.max(count, 1), 5);
-  for (let i = 1; i <= clamped; i++) container.insertAdjacentHTML('beforeend', createTerminreihe(i));
-
-  const reihenNeu = Array.from(container.querySelectorAll('.terminreihe'));
-  const restoreCount = Math.min(snapshot.length, reihenNeu.length);
-  for (let i = 0; i < restoreCount; i++) {
-    const data = snapshot[i], r = reihenNeu[i];
-    const set = (sel, val) => { const el = r.querySelector(sel); if (el && val !== '') el.value = val; };
-    set('.dienst_bezeichnung', data.bezeichnung);
-    set('.dienst_wochentag', data.wochentag);
-    set('.dienst_turnus', data.turnus);
-
-    const monatlichDiv = r.querySelector('.monatlich-option');
-    const selectMonat = monatlichDiv?.querySelector('select');
-    if (data.turnus === 'monatlich') { monatlichDiv?.classList.remove('hidden'); selectMonat?.removeAttribute('disabled'); }
-    else { monatlichDiv?.classList.add('hidden'); selectMonat?.setAttribute('disabled','disabled'); }
-
-    set('.dienst_monat_position', data.monatPos);
-    set('.dienst_start', data.start);
-    set('.dienst_ende', data.ende);
-
-    const startDateEl = r.querySelector('.dienst_start');
-    const endDateEl   = r.querySelector('.dienst_ende');
-    if (startDateEl && data.startDateManual) startDateEl.dataset.manual='1';
-    if (endDateEl   && data.endDateManual)   endDateEl.dataset.manual='1';
-
-    const startzeitEl = r.querySelector('.dienst_startzeit');
-    const endzeitEl   = r.querySelector('.dienst_endzeit');
-    if (startzeitEl) { if (data.startzeit) startzeitEl.value=data.startzeit; if (data.startzeitManual) startzeitEl.dataset.manual='1'; }
-    if (endzeitEl)   { if (data.endzeit)   endzeitEl.value  =data.endzeit;   if (data.endzeitManual)   endzeitEl.dataset.manual='1'; }
-  }
-
-  document.querySelectorAll('.dienst_turnus').forEach(select => {
-    select.addEventListener('change', e => {
-      const wrapper = e.target.closest('.terminreihe');
-      const monatlichDiv = wrapper.querySelector('.monatlich-option');
-      const selectMonat = monatlichDiv.querySelector('select');
-      if (e.target.value === 'monatlich') { monatlichDiv.classList.remove('hidden'); selectMonat.removeAttribute('disabled'); }
-      else { monatlichDiv.classList.add('hidden'); selectMonat.setAttribute('disabled','disabled'); clearFieldError(selectMonat); }
-      validateTerminreihe(wrapper);
-    });
+  const neu=Array.from(container.querySelectorAll('.terminreihe'));
+  neu.forEach((r,i)=>{
+    const d=snapshot[i]; if(!d) return;
+    const set=(sel,val)=>{ const el=r.querySelector(sel); if(el && val!=='') el.value=val; };
+    set('.dienst_bezeichnung', d.bezeichnung); set('.dienst_wochentag', d.wochentag); set('.dienst_turnus', d.turnus);
+    const monatDiv=r.querySelector('.monatlich-option'); const selMon=monatDiv?.querySelector('select');
+    if(d.turnus==='monatlich'){ monatDiv?.classList.remove('hidden'); selMon?.removeAttribute('disabled'); }
+    set('.dienst_monat_position', d.monatPos);
+    const sDate=r.querySelector('.dienst_start'), eDate=r.querySelector('.dienst_ende');
+    if(sDate){ if(d.start) sDate.value=d.start; if(d.startDateManual) sDate.dataset.manual='1'; }
+    if(eDate){ if(d.ende) eDate.value=d.ende; if(d.endDateManual) eDate.dataset.manual='1'; }
+    const st=r.querySelector('.dienst_startzeit'), en=r.querySelector('.dienst_endzeit');
+    if(st){ if(d.startzeit) st.value=d.startzeit; if(d.startzeitManual) st.dataset.manual='1'; }
+    if(en){ if(d.endzeit) en.value=d.endzeit; if(d.endzeitManual) en.dataset.manual='1'; }
   });
 
-  applyDateBounds(container);
-  updateDateHints(container);
+  applyDateBounds(container); updateGlobalHints();
+
+  container.querySelectorAll('.dienst_turnus').forEach(select=>{
+    select.addEventListener('change', e=>{
+      const wrap=e.target.closest('.terminreihe'); const monatDiv=wrap.querySelector('.monatlich-option'); const selMon=monatDiv.querySelector('select');
+      if(e.target.value==='monatlich'){ monatDiv.classList.remove('hidden'); selMon.removeAttribute('disabled'); }
+      else { monatDiv.classList.add('hidden'); selMon.setAttribute('disabled','disabled'); }
+    });
+  });
 }
 
-/* ===== Auto-Badges ===== */
-function setAutoBadgeFor(input, on){
-  if (!input) return;
-  const label = input.closest('label'); if (!label) return;
-  let badge = label.querySelector('.auto-badge');
-  if (on){ if (!badge){ badge=document.createElement('span'); badge.className='auto-badge'; badge.textContent='⚡ auto'; label.appendChild(badge);} input.classList.add('bg-yellow-100'); }
-  else { if (badge) badge.remove(); input.classList.remove('bg-yellow-100'); }
+/* ========= Auto-Badges ========= */
+function setAutoBadgeFor(input,on){
+  if(!input) return; const label=input.closest('label'); if(!label) return;
+  let badge=label.querySelector('.auto-badge');
+  if(on){ if(!badge){ badge=document.createElement('span'); badge.className='auto-badge'; badge.textContent='⚡ auto'; label.appendChild(badge);} input.classList.add('bg-yellow-100'); }
+  else { if(badge) badge.remove(); input.classList.remove('bg-yellow-100'); }
 }
 function applyAutoBadgesForDates(scope){
-  const root = scope && scope.querySelectorAll ? scope : document;
-  root.querySelectorAll('.terminreihe').forEach(r=>{
+  (scope||document).querySelectorAll('.terminreihe').forEach(r=>{
     const s=r.querySelector('.dienst_start'), e=r.querySelector('.dienst_ende');
     [s,e].forEach(inp=>{
       if(!inp || inp.dataset.manual==='1') return;
@@ -496,651 +461,703 @@ function applyAutoBadgesForDates(scope){
   });
 }
 function applyAutoBadgesForTimes(scope){
-  const root = scope && scope.querySelectorAll ? scope : document;
-  root.querySelectorAll('.terminreihe').forEach(reihe=>{
-    const w = reihe.querySelector('.dienst_wochentag')?.value || '';
-    const start = reihe.querySelector('.dienst_startzeit');
-    const ende  = reihe.querySelector('.dienst_endzeit');
-    if (!start || !ende) return;
-    if (start.dataset.manual==='1' || ende.dataset.manual==='1') return;
+  (scope||document).querySelectorAll('.terminreihe').forEach(reihe=>{
+    const w=reihe.querySelector('.dienst_wochentag')?.value||'';
+    const st=reihe.querySelector('.dienst_startzeit'); const en=reihe.querySelector('.dienst_endzeit');
+    if(!st||!en||st.dataset.manual==='1'||en.dataset.manual==='1') return;
     const werktage=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-    if (!w){ start.value=''; ende.value=''; setAutoBadgeFor(start,false); setAutoBadgeFor(ende,false); return; }
-    if (w==='Samstag'||w==='Sonntag'){ start.value='07:30'; ende.value='17:00'; } else if (werktage.includes(w)){ start.value='19:00'; ende.value='22:30'; }
-    setAutoBadgeFor(start,true); setAutoBadgeFor(ende,true);
+    if(!w){ st.value=''; en.value=''; setAutoBadgeFor(st,false); setAutoBadgeFor(en,false); return; }
+    if(w==='Samstag'||w==='Sonntag'){ st.value='07:30'; en.value='17:00'; }
+    else if(werktage.includes(w)){ st.value='19:00'; en.value='22:30'; }
+    setAutoBadgeFor(st,true); setAutoBadgeFor(en,true);
   });
 }
 
-/* ===== Datums-Utils ===== */
-function ymd(date){ const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,'0'); const d=String(date.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; }
-function ymdToLocalDate(ymdStr){ const [y,m,d]=ymdStr.split('-').map(Number); return new Date(y,(m||1)-1,d||1); }
-
-/* ===== Live-Validierung ===== */
+/* ========= Validierung ========= */
+function getOrCreateErrorEl(input){
+  const label=input.closest('label')||input.parentElement||input;
+  let p=label.querySelector('.error-msg'); if(!p){ p=document.createElement('p'); p.className='error-msg'; label.appendChild(p); }
+  return p;
+}
+function setFieldError(input,msg){
+  input?.classList.add('error-field'); input?.setAttribute('aria-invalid','true');
+  const p=getOrCreateErrorEl(input); p.textContent=msg||'Pflichtfeld'; p.style.display='block';
+}
+function clearFieldError(input){
+  input?.classList.remove('error-field'); input?.removeAttribute('aria-invalid');
+  const p=input?.closest('label')?.querySelector('.error-msg'); if(p){ p.style.display='none'; p.textContent=''; }
+}
 function validateTerminreihe(reihe){
-  let valid = true;
-  const bezeichnung = reihe.querySelector('.dienst_bezeichnung');
-  const wochentag = reihe.querySelector('.dienst_wochentag');
-  const turnus = reihe.querySelector('.dienst_turnus');
-  const monatPos = reihe.querySelector('.dienst_monat_position');
-  const monatWrapper = reihe.querySelector('.monatlich-option');
-  const start = reihe.querySelector('.dienst_start');
-  const ende = reihe.querySelector('.dienst_ende');
-  const startzeit = reihe.querySelector('.dienst_startzeit');
-  const endzeit = reihe.querySelector('.dienst_endzeit');
-  const {minYear, maxYear} = getYearBounds();
+  let valid=true;
+  const bezeichnung=reihe.querySelector('.dienst_bezeichnung');
+  const wochentag=reihe.querySelector('.dienst_wochentag');
+  const turnus=reihe.querySelector('.dienst_turnus');
+  const monatPos=reihe.querySelector('.dienst_monat_position');
+  const monatWrap=reihe.querySelector('.monatlich-option');
+  const start=reihe.querySelector('.dienst_start');
+  const ende =reihe.querySelector('.dienst_ende');
+  const st=reihe.querySelector('.dienst_startzeit');
+  const en=reihe.querySelector('.dienst_endzeit');
+  const {minYear,maxYear}=getYearBounds();
 
-  if (!bezeichnung.value.trim()){ setFieldError(bezeichnung,'Bitte eine Bezeichnung eingeben.'); valid=false; } else { clearFieldError(bezeichnung); }
-  if (!wochentag.value){ setFieldError(wochentag,'Bitte einen Wochentag wählen.'); valid=false; } else { clearFieldError(wochentag); }
-  if (!turnus.value){ setFieldError(turnus,'Bitte einen Turnus wählen.'); valid=false; } else { clearFieldError(turnus); }
+  if(!bezeichnung.value.trim()){ setFieldError(bezeichnung,'Bitte eine Bezeichnung eingeben.'); valid=false; } else clearFieldError(bezeichnung);
+  if(!wochentag.value){ setFieldError(wochentag,'Bitte einen Wochentag wählen.'); valid=false; } else clearFieldError(wochentag);
+  if(!turnus.value){ setFieldError(turnus,'Bitte einen Turnus wählen.'); valid=false; } else clearFieldError(turnus);
 
-  if (turnus.value==='monatlich'){
-    monatWrapper?.classList.remove('hidden'); monatPos?.removeAttribute('disabled');
-    if (!monatPos.value){ setFieldError(monatPos,'Bitte die Position im Monat wählen.'); valid=false; } else { clearFieldError(monatPos); }
-  } else {
-    monatWrapper?.classList.add('hidden'); monatPos?.setAttribute('disabled','disabled'); clearFieldError(monatPos);
-  }
+  if(turnus.value==='monatlich'){
+    monatWrap?.classList.remove('hidden'); monatPos?.removeAttribute('disabled');
+    if(!monatPos.value){ setFieldError(monatPos,'Bitte die Position im Monat wählen.'); valid=false; } else clearFieldError(monatPos);
+  } else { monatWrap?.classList.add('hidden'); monatPos?.setAttribute('disabled','disabled'); clearFieldError(monatPos); }
 
-  if (!start.value){ setFieldError(start,'Bitte ein Startdatum wählen.'); valid=false; }
-  else { const y=new Date(start.value).getFullYear(); if (y<minYear||y>maxYear){ setFieldError(start,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else { clearFieldError(start); } }
+  if(!start.value){ setFieldError(start,'Bitte ein Startdatum wählen.'); valid=false; }
+  else { const y=new Date(start.value).getFullYear(); if(y<minYear||y>maxYear){ setFieldError(start,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(start); }
 
-  if (!ende.value){ setFieldError(ende,'Bitte ein Enddatum wählen.'); valid=false; }
-  else { const y2=new Date(ende.value).getFullYear(); if (y2<minYear||y2>maxYear){ setFieldError(ende,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else { clearFieldError(ende); } }
+  if(!ende.value){ setFieldError(ende,'Bitte ein Enddatum wählen.'); valid=false; }
+  else { const y2=new Date(ende.value).getFullYear(); if(y2<minYear||y2>maxYear){ setFieldError(ende,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(ende); }
 
-  if (start.value && ende.value){
+  if(start.value && ende.value){
     const sd=new Date(start.value), ed=new Date(ende.value);
-    if (sd>ed){ setFieldError(ende,'Enddatum liegt vor Startdatum.'); valid=false; } else { clearFieldError(ende); }
+    if(sd>ed){ setFieldError(ende,'Enddatum liegt vor Startdatum.'); valid=false; } else clearFieldError(ende);
   }
 
-  if (!startzeit.value){ setFieldError(startzeit,'Bitte eine Startzeit angeben.'); valid=false; } else { clearFieldError(startzeit); }
-  if (!endzeit.value){ setFieldError(endzeit,'Bitte eine Endzeit angeben.'); valid=false; } else { clearFieldError(endzeit); }
-  if (startzeit.value && endzeit.value && startzeit.value >= endzeit.value){ setFieldError(endzeit,'Endzeit muss nach Startzeit liegen.'); valid=false; } else { clearFieldError(endzeit); }
+  if(!st.value){ setFieldError(st,'Bitte eine Startzeit angeben.'); valid=false; } else clearFieldError(st);
+  if(!en.value){ setFieldError(en,'Bitte eine Endzeit angeben.'); valid=false; } else clearFieldError(en);
+  if(st.value && en.value && st.value >= en.value){ setFieldError(en,'Endzeit muss nach Startzeit liegen.'); valid=false; } else clearFieldError(en);
 
   return valid;
 }
 function validateGeneralFields(){
   let valid=true;
-  const ovName=$('#ov_name');
-  const bundesland=$('#bundesland');
-  if (!ovName.value.trim()){ setFieldError(ovName,'Bitte geben Sie den Namen des Ortsverbands ein.'); valid=false; } else { clearFieldError(ovName); }
-  if (!bundesland.value){ setFieldError(bundesland,'Bitte wählen Sie ein Bundesland aus. Wird für die Feiertags- & Ferien-Ermittlung benötigt.'); valid=false; } else { clearFieldError(bundesland); }
+  const ov=$('#ov_name'); const bl=$('#bundesland');
+  if(!ov.value.trim()){ setFieldError(ov,'Bitte geben Sie den Namen des Ortsverbands ein.'); valid=false; } else clearFieldError(ov);
+  if(!bl.value){ setFieldError(bl,'Bitte Bundesland wählen.'); valid=false; } else clearFieldError(bl);
   return valid;
 }
 
-/* ===== Collapsible ===== */
-function setupCollapsible(){
-  const btn = $('#toggleHinweise');
-  const panel = $('#hinweisePanel');
-  const chevron = btn?.querySelector('.chevron');
-  if (!btn || !panel) return;
-
-  function setOpen(open){
-    btn.setAttribute('aria-expanded', String(open));
-    if (chevron) chevron.setAttribute('aria-expanded', String(open));
-    btn.querySelector('span').textContent = open ? 'Hinweise & Legende verbergen' : 'Hinweise & Legende anzeigen';
-    if (prefersReduced){
-      panel.classList.toggle('open', open);
-      panel.style.maxHeight = open ? 'none' : '0px';
-      panel.style.opacity = open ? '1' : '0';
-    } else {
-      if (open){
-        panel.classList.add('open'); panel.style.maxHeight='0px'; panel.style.opacity='0';
-        requestAnimationFrame(()=>{ const h=panel.scrollHeight; panel.style.maxHeight=h+'px'; panel.style.opacity='1'; });
-      } else {
-        const h=panel.scrollHeight; panel.style.maxHeight=h+'px'; panel.style.opacity='1';
-        requestAnimationFrame(()=>{
-          panel.style.maxHeight='0px'; panel.style.opacity='0';
-          panel.addEventListener('transitionend', function handler(){ panel.classList.remove('open'); panel.removeEventListener('transitionend', handler); });
-        });
-      }
-    }
-    localStorage.setItem('hinweiseOpen', open ? '1' : '0');
-  }
-  const saved = localStorage.getItem('hinweiseOpen') === '1';
-  setOpen(saved);
-  btn.addEventListener('click', ()=> setOpen(!(btn.getAttribute('aria-expanded') === 'true')));
+function updateFerienHint(){
+  const ferienHint=$('#ferien_hint'), ferienCheck=$('#ferienCheck'); if(!ferienHint||!ferienCheck) return;
+  ferienHint.classList.toggle('hidden', ferienCheck.checked);
 }
 
-/* ===== Init ===== */
-document.addEventListener('DOMContentLoaded', () => {
-  try {
-    const sOV = localStorage.getItem('ov_name'); if (sOV!==null) $('#ov_name').value = sOV;
-    const sBL = localStorage.getItem('bundesland'); if (sBL!==null) $('#bundesland').value = sBL;
-    const sFT = localStorage.getItem('feiertagsCheck'); if (sFT!==null) $('#feiertagsCheck').checked = (sFT==='1');
-    const sFerien = localStorage.getItem('ferienCheck'); const ferienEl=$('#ferienCheck');
-    if (sFerien===null) { ferienEl.checked=true; localStorage.setItem('ferienCheck','1'); } else { ferienEl.checked=(sFerien==='1'); }
-  } catch (e) {}
+/* ========= Init ========= */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await setupBrand();
 
-  updateTerminreihen();
-  applyDateBounds();
-  updateDateHints();
-  applyAutoBadgesForDates();
-  applyAutoBadgesForTimes();
-  setupCollapsible();
+  // gespeicherte Werte
+  try{
+    const sOV=localStorage.getItem('ov_name'); if(sOV!==null) $('#ov_name').value=sOV;
+    const sBL=localStorage.getItem('bundesland'); if(sBL!==null) $('#bundesland').value=sBL;
+    const sFT=localStorage.getItem('feiertagsCheck'); if(sFT!==null) $('#feiertagsCheck').checked=(sFT==='1');
+    const sFerien=localStorage.getItem('ferienCheck'); if(sFerien!==null) $('#ferienCheck').checked=(sFerien==='1');
+  }catch{}
 
-  $('#ov_name').addEventListener('input', validateGeneralFields);
-  $('#bundesland').addEventListener('change', validateGeneralFields);
+  updateTerminreihen(); applyDateBounds(); updateGlobalHints(); applyAutoBadgesForDates(); applyAutoBadgesForTimes();
+  setupCollapsible(); updateFerienHint();
 
-  $('#anzahl_reihen').addEventListener('change', () => {
-    updateTerminreihen(); applyDateBounds(); updateDateHints(); applyAutoBadgesForDates(); applyAutoBadgesForTimes();
+  // Toolbar initial sicher ausblenden
+  updateToolbarVisibility();
+
+  // Fehler sofort entfernen (Allgemeine Angaben)
+  $('#ov_name').addEventListener('input', e=>{ localStorage.setItem('ov_name', e.target.value); if(e.target.value.trim()) clearFieldError(e.target); });
+  $('#bundesland').addEventListener('change', e=>{ localStorage.setItem('bundesland', e.target.value); if(e.target.value) clearFieldError(e.target); });
+  $('#feiertagsCheck').addEventListener('change', e=>{ localStorage.setItem('feiertagsCheck', e.target.checked?'1':'0'); });
+  $('#ferienCheck').addEventListener('change', e=>{ localStorage.setItem('ferienCheck', e.target.checked?'1':'0'); updateGlobalHints(); updateFerienHint(); });
+
+  $('#anzahl_reihen').addEventListener('change', ()=>{ updateTerminreihen(); applyDateBounds(); applyAutoBadgesForDates(); applyAutoBadgesForTimes(); });
+  
+  // Inputs beobachten (Terminreihen)
+  $('#terminreihen-container').addEventListener('input', e=>{
+    const reihe=e.target.closest('.terminreihe'); if(!reihe) return;
+    if(e.target.matches('.dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')){ e.target.dataset.manual='1'; setAutoBadgeFor(e.target,false); }
+    if(e.target.matches('.dienst_bezeichnung, .dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')) validateTerminreihe(reihe);
   });
-
-  $('#terminreihen-container').addEventListener('input', e => {
-    const reihe = e.target.closest('.terminreihe');
-    if (!reihe) return;
-    if (e.target.matches('.dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende, .dienst_bezeichnung')) {
-      if (e.target.matches('.dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')) {
-        e.target.dataset.manual='1';
-        setAutoBadgeFor(e.target, false);
-      }
-      validateTerminreihe(reihe);
-    }
-  });
-
-  $('#terminreihen-container').addEventListener('change', e => {
-    const reihe = e.target.closest('.terminreihe'); if (!reihe) return;
-    if (e.target.classList.contains('dienst_wochentag')) {
+  $('#terminreihen-container').addEventListener('change', e=>{
+    const r=e.target.closest('.terminreihe'); if(!r) return;
+    if(e.target.classList.contains('dienst_wochentag')){
       const val=e.target.value, werktage=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-      const st=reihe.querySelector('.dienst_startzeit'), en=reihe.querySelector('.dienst_endzeit');
-      const manS = st?.dataset.manual==='1', manE = en?.dataset.manual==='1';
-      if (val===''){ if (st){ st.value=''; setAutoBadgeFor(st,false); delete st.dataset.manual; } if (en){ en.value=''; setAutoBadgeFor(en,false); delete en.dataset.manual; } }
-      else if (val==='Samstag'||val==='Sonntag'){ if (st&&!manS){ st.value='07:30'; setAutoBadgeFor(st,true);} if (en&&!manE){ en.value='17:00'; setAutoBadgeFor(en,true);} }
-      else if (werktage.includes(val)){ if (st&&!manS){ st.value='19:00'; setAutoBadgeFor(st,true);} if (en&&!manE){ en.value='22:30'; setAutoBadgeFor(en,true);} }
+      const st=r.querySelector('.dienst_startzeit'), en=r.querySelector('.dienst_endzeit');
+      const ms=st?.dataset.manual==='1', me=en?.dataset.manual==='1';
+      if(val===''){ if(st&&!ms){st.value='';setAutoBadgeFor(st,false);} if(en&&!me){en.value='';setAutoBadgeFor(en,false);} }
+      else if(val==='Samstag'||val==='Sonntag'){ if(st&&!ms){st.value='07:30';setAutoBadgeFor(st,true);} if(en&&!me){en.value='17:00';setAutoBadgeFor(en,true);} }
+      else if(werktage.includes(val)){ if(st&&!ms){st.value='19:00';setAutoBadgeFor(st,true);} if(en&&!me){en.value='22:30';setAutoBadgeFor(en,true);} }
     }
-    if (e.target.matches('.dienst_turnus, .dienst_monat_position, .dienst_wochentag, .dienst_start, .dienst_ende')) validateTerminreihe(reihe);
+    if(e.target.matches('.dienst_turnus, .dienst_monat_position, .dienst_wochentag, .dienst_start, .dienst_ende')) validateTerminreihe(r);
   });
 
-  try {
-    $('#ov_name').addEventListener('input', e => localStorage.setItem('ov_name', e.target.value));
-    $('#bundesland').addEventListener('change', e => localStorage.setItem('bundesland', e.target.value));
-    $('#feiertagsCheck').addEventListener('change', e => localStorage.setItem('feiertagsCheck', e.target.checked ? '1' : '0'));
-    $('#ferienCheck').addEventListener('change', e => localStorage.setItem('ferienCheck', e.target.checked ? '1' : '0'));
-  } catch (e) {}
-
-  updateToTopVisibility();
-  updateResultsButtonVisibility(); // initial
+  // Floating Buttons
+  updateToTopVisibility(); updateResultsButtonVisibility(); updateExportButtonVisibility();
 });
 
-/* ===== Endgültige Validierung ===== */
-function validateInputs(){
-  let valid = true;
-  if (!validateGeneralFields()) valid = false;
-  document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe => { if (!validateTerminreihe(reihe)) valid = false; });
-  return valid;
+/* ========= Collapsible ========= */
+function setupCollapsible(){
+  const btn=$('#toggleHinweise'), panel=$('#hinweisePanel'), chev=btn?.querySelector('.chevron'); if(!btn||!panel) return;
+  function setOpen(open){
+    btn.setAttribute('aria-expanded', String(open)); chev?.setAttribute('aria-expanded', String(open));
+    btn.querySelector('span').textContent = open ? 'Hinweise & Legende verbergen' : 'Hinweise & Legende anzeigen';
+    if (prefersReduced){ panel.classList.toggle('open', open); panel.style.maxHeight=open?'none':'0px'; panel.style.opacity=open?'1':'0'; }
+    else {
+      if(open){ panel.classList.add('open'); panel.style.maxHeight='0px'; panel.style.opacity='0'; requestAnimationFrame(()=>{ const h=panel.scrollHeight; panel.style.maxHeight=h+'px'; panel.style.opacity='1'; }); }
+      else { const h=panel.scrollHeight; panel.style.maxHeight=h+'px'; panel.style.opacity='1'; requestAnimationFrame(()=>{ panel.style.maxHeight='0px'; panel.style.opacity='0'; panel.addEventListener('transitionend', function handler(){ panel.classList.remove('open'); panel.removeEventListener('transitionend', handler); }); }); }
+    }
+    localStorage.setItem('hinweiseOpen', open?'1':'0');
+  }
+  setOpen(localStorage.getItem('hinweiseOpen') === '1');
+  btn.addEventListener('click', ()=> setOpen(!(btn.getAttribute('aria-expanded')==='true')));
 }
 
-/* ===== Export-Buttons ===== */
-function toggleExportButtons(enable){
-  ['btnCsv','btnPdf','btnIcs','btnXlsx'].forEach(id=>{
-    const btn=$( '#' + id );
-    btn.disabled=!enable;
-    btn.classList.toggle('disabled-btn', !enable);
-  });
+/* ========= Ergebnis-Berechnung ========= */
+function ymd(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${da}`; }
+function ymdToLocalDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,(m||1)-1,d||1); }
+
+function validateInputs(){
+  let valid=true;
+  if(!validateGeneralFields()) valid=false;
+  document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe=>{ if(!validateTerminreihe(reihe)) valid=false; });
+  return valid;
 }
+function toggleExportButtons(enable){ ['btnCsv','btnPdf','btnIcs','btnXlsx'].forEach(id=>{ const b=$('#'+id); b.disabled=!enable; b.classList.toggle('disabled-btn', !enable); }); }
 toggleExportButtons(false);
 
-/* ===== Dateiname & Helfer ===== */
-function csvLine(arr, sep){ return arr.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(sep); }
-function sanitizeFileName(name){ return (name || 'OV').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'') || 'OV'; }
-function getPlanYearsFromTable(){
-  const cells=document.querySelectorAll('#tabelleBody tr td:first-child');
-  const years=new Set();
-  cells.forEach(td=>{ const parts=(td.innerText||'').split('.'); const y=parts[2]; if (y) years.add(y); });
-  if (years.size===0) return '';
-  const arr=Array.from(years).map(x=>parseInt(x,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
-  return arr.length===1 ? String(arr[0]) : `${arr[0]}-${arr[arr.length-1]}`;
-}
-function buildBaseFileName(){
-  const ovRaw=$('#ov_name')?.value || 'OV';
-  const ov=sanitizeFileName(ovRaw);
-  const years=getPlanYearsFromTable() || String(new Date().getFullYear());
-  return `dienstplan_${ov}_${years}`;
-}
-function getBundeslandText(){
-  const opt = document.querySelector('#bundesland option:checked');
-  const t = (opt?.textContent || '').trim();
-  return t && t!=='Bitte wählen' ? t : '';
-}
-
-/* ===== OpenHolidays API ===== */
-function mapBundeslandToSubdivision(bl){ const m={'BW':'DE-BW','BY':'DE-BY','BE':'DE-BE','BB':'DE-BB','HB':'DE-HB','HH':'DE-HH','HE':'DE-HE','MV':'DE-MV','NI':'DE-NI','NW':'DE-NW','RP':'DE-RP','SL':'DE-SL','SN':'DE-SN','ST':'DE-ST','SH':'DE-SH','TH':'DE-TH'}; return m[bl] || ''; }
-function extractName(obj){ const n=obj?.name; if(!n) return ''; if (typeof n==='string') return n; if (Array.isArray(n)){ const de=n.find(x=>x.language==='DE'||x.languageIsoCode==='DE'); return (de?.text||de?.name||n[0]?.text||n[0]?.name||'').toString(); } return String(n); }
-function addRangeDatesToMap(map, startStr, endStr, name){
-  if(!startStr) return;
-  const s=ymdToLocalDate(startStr.slice(0,10));
-  const e=ymdToLocalDate((endStr||startStr).slice(0,10));
-  for (let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){
-    const key=ymd(d);
-    map[key]=map[key] ? map[key] + ' / ' + name : name;
+/* === Toolbar (Sichtbarkeit + Suchen / Leeren / Zähler) === */
+function updateToolbarVisibility(){
+  const bar = $('#tableToolbar') || $('.table-toolbar');
+  const visible = hasResultsVisible();
+  if(bar){
+    bar.classList.toggle('hidden', !visible);
   }
 }
-async function fetchPublicHolidaysForYears(years, subdivision){
-  const map={}; const base='https://openholidaysapi.org/PublicHolidays';
-  const qs=(y,useSubdivision=true)=> base+`?countryIsoCode=DE&languageIsoCode=DE&validFrom=${y}-01-01&validTo=${y}-12-31` + (useSubdivision && subdivision ? `&subdivisionCode=${encodeURIComponent(subdivision)}` : '');
-  for (const y of years){
-    try {
-      let res=await fetch(qs(y,true),{ headers:{'accept':'application/json'} });
-      let ok=res.ok, data=ok?await res.json():null;
-      if (!ok || !Array.isArray(data) || data.length===0){ res=await fetch(qs(y,false),{ headers:{'accept':'application/json'} }); data=res.ok?await res.json():[]; }
-      (data||[]).forEach(item=>{
-        const name=extractName(item) || item?.englishName || '';
-        const start=item?.startDate || item?.validFrom || item?.date || '';
-        const end  =item?.endDate   || item?.validTo   || item?.date || '';
-        addRangeDatesToMap(map, start, end, name);
-      });
-    } catch(e){ console.warn('Feiertage (OpenHolidays) Fehler:', e); }
-  }
-  return map;
-}
-async function fetchSchoolHolidaysForYears(years, subdivision){
-  const map={}; if (!subdivision) return map;
-  const base='https://openholidaysapi.org/SchoolHolidays';
-  const qs=(y)=> base+`?countryIsoCode=DE&subdivisionCode=${encodeURIComponent(subdivision)}&languageIsoCode=DE&validFrom=${y}-01-01&validTo=${y}-12-31`;
-  for (const y of years){
-    try {
-      const res=await fetch(qs(y),{ headers:{'accept':'application/json'} });
-      if (!res.ok) continue;
-      const data=await res.json();
-      (data||[]).forEach(item=>{
-        const name=extractName(item) || item?.englishName || 'Ferien';
-        const start=item?.startDate || item?.validFrom || '';
-        const end  =item?.endDate   || item?.validTo   || start;
-        addRangeDatesToMap(map, start, end, name);
-      });
-    } catch(e){ console.warn('Schulferien (OpenHolidays) Fehler:', e); }
-  }
-  return map;
-}
-
-/* ===== Berechnung ===== */
-document.getElementById('btnBerechnen').addEventListener('click', async () => {
-  if (!validateInputs()) { 
-    toggleExportButtons(false);
-    updateResultsButtonVisibility();
-    return; 
-  }
-
-  const bundesland = $('#bundesland').value;
-  const subdivision = mapBundeslandToSubdivision(bundesland);
-  const dienstAnFeiertagen = $('#feiertagsCheck').checked;
-  const dienstInFerien     = $('#ferienCheck').checked;
-
-  const {minYear, maxYear} = getYearBounds();
-  const jahre = new Set();
-  document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe => {
-    const start = reihe.querySelector('.dienst_start').value;
-    const ende  = reihe.querySelector('.dienst_ende').value;
-    if (start){ const y=new Date(start).getFullYear(); if (y>=minYear && y<=maxYear) jahre.add(y); }
-    if (ende) { const y2=new Date(ende).getFullYear(); if (y2>=minYear && y2<=maxYear) jahre.add(y2); }
-  });
-  if (jahre.size===0) jahre.add(new Date().getFullYear());
-
-  const [feiertageMap, ferienMap] = await Promise.all([
-    fetchPublicHolidaysForYears([...jahre], subdivision),
-    fetchSchoolHolidaysForYears([...jahre], subdivision)
-  ]);
-
-  const tbody = $('#tabelleBody');
-  tbody.innerHTML = '';
-  $('#ergebnisTabelle').classList.add('hidden');
-
-  const tagZuIndex = { Sonntag:0, Montag:1, Dienstag:2, Mittwoch:3, Donnerstag:4, Freitag:5, Samstag:6 };
-  const indexZuTag = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-  const alleTermine = [];
-
-  document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe => {
-    const bezeichnungOriginal = reihe.querySelector('.dienst_bezeichnung').value;
-    const wochentag = reihe.querySelector('.dienst_wochentag').value;
-    const turnus    = reihe.querySelector('.dienst_turnus').value;
-    const monatPos  = reihe.querySelector('.dienst_monat_position')?.value;
-    const datumStart = new Date(reihe.querySelector('.dienst_start').value);
-    const datumEnde  = new Date(reihe.querySelector('.dienst_ende').value);
-    const zeitStart  = reihe.querySelector('.dienst_startzeit').value;
-    const zeitEnde   = reihe.querySelector('.dienst_endzeit').value;
-
-    let current = new Date(datumStart);
-    const zielTag = tagZuIndex[wochentag];
-    const termine = [];
-
-    if (turnus === 'monatlich') {
-      current.setDate(1);
-      while (current <= datumEnde) {
-        const jahr = current.getFullYear();
-        const monat = current.getMonth();
-        theFirst = new Date(jahr, monat, 1);
-        const lastOfMonth  = new Date(jahr, monat + 1, 0);
-        const tage = [];
-        for (let d = new Date(theFirst); d <= lastOfMonth; d.setDate(d.getDate() + 1)) {
-          if (d.getDay() === zielTag) tage.push(new Date(d.getTime()));
-        }
-        const idx = (monatPos === '-1') ? (tage.length - 1) : (parseInt(monatPos || '1', 10) - 1);
-        if (idx >= 0 && idx < tage.length) {
-          const chosen = tage[idx];
-          if (chosen >= datumStart && chosen <= datumEnde) termine.push(chosen);
-        }
-        current = new Date(jahr, monat + 1, 1);
-      }
-    } else {
-      while (current.getDay() !== zielTag) current.setDate(current.getDate() + 1);
-      while (current <= datumEnde) {
-        if (current >= datumStart) termine.push(new Date(current));
-        current.setDate(current.getDate() + (turnus === '2woechentlich' ? 14 : 7));
-      }
-    }
-
-    for (const datum of termine) {
-      if (datum < datumStart || datum > datumEnde) continue;
-      const iso = ymd(datum);
-      const ferienname    = (!dienstInFerien ? (ferienMap[iso] || '') : '');
-      const feiertagsname = feiertageMap[iso] || '';
-      let bezeichnung = bezeichnungOriginal;
-      let infoText = '';
-
-      if (!dienstInFerien && ferienname) {
-        bezeichnung = `Entfällt: ${bezeichnungOriginal}`;
-        infoText = ferienname;
-      } else if (!dienstAnFeiertagen && feiertagsname) {
-        bezeichnung = `Entfällt: ${bezeichnungOriginal}`;
-        infoText = feiertagsname;
-      } else {
-        infoText = feiertagsname;
-      }
-      alleTermine.push({ datum, bezeichnung, zeit: `${zeitStart} - ${zeitEnde}`, feiertag: infoText });
-    }
-  });
-
-  alleTermine.sort((a,b)=> a.datum - b.datum);
-  alleTermine.forEach(eintrag=>{
-    const tr=document.createElement('tr');
-    if (eintrag.feiertag) tr.classList.add('feiertag-row');
-    tr.innerHTML = `
-      <td class="border px-4 py-2">${String(eintrag.datum.getDate()).padStart(2,'0')}.${String(eintrag.datum.getMonth()+1).padStart(2,'0')}.${eintrag.datum.getFullYear()}</td>
-      <td class="border px-4 py-2">${indexZuTag[eintrag.datum.getDay()]}</td>
-      <td class="border px-4 py-2">${eintrag.bezeichnung}</td>
-      <td class="border px-4 py-2">${eintrag.zeit}</td>
-      <td class="border px-4 py-2">${eintrag.feiertag}</td>`;
-    tbody.appendChild(tr);
-  });
-
-  const hasRows = alleTermine.length > 0;
-  const tableEl   = $('#ergebnisTabelle');
-  const titleEl   = $('#ergebnisTitel');
-  const dividerEl = $('#ergebnisDivider');
-
-  if (hasRows){
-    tableEl.classList.remove('hidden');
-    titleEl.classList.remove('hidden');
-    dividerEl.classList.remove('hidden');
-    toggleExportButtons(true);
-
-    // Buttons-Visibility aktualisieren
-    updateResultsButtonVisibility();
-
-    // sanft zur Überschrift scrollen
-    requestAnimationFrame(() => {
-      titleEl.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
-      try { titleEl.focus({ preventScroll: true }); } catch(e){}
-      updateToTopVisibility();
-    });
+function ensureTableToolbar(){
+  const card=document.querySelector('.table-card'); if(!card) return;
+  let bar=card.querySelector('.table-toolbar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.className='table-toolbar hidden';
+    bar.id='tableToolbar';
+    bar.innerHTML=`
+      <div class="left">
+        <input id="tableSearch" class="table-search" type="search" placeholder="Suchen… (Datum, Tag, Dienst, Hinweis)" aria-label="Tabelle durchsuchen">
+        <button id="tableSearchClear" type="button" class="px-2 py-1 border rounded text-sm hover:bg-gray-50" title="Suche leeren">Leeren</button>
+        <span id="tableCount" class="table-count"></span>
+      </div>
+      <div class="right"></div>
+    `;
+    card.insertBefore(bar, card.firstChild);
   } else {
-    tableEl.classList.add('hidden');
-    titleEl.classList.add('hidden');
-    dividerEl.classList.add('hidden');
-    toggleExportButtons(false);
-    updateResultsButtonVisibility();
-    alert('Keine gültigen Termine ermittelt.');
+    // sicherstellen, dass nötige Elemente existieren
+    if(!bar.querySelector('#tableSearch')) {
+      const left=bar.querySelector('.left') || bar.appendChild(document.createElement('div'));
+      left.className='left';
+      left.insertAdjacentHTML('afterbegin', `<input id="tableSearch" class="table-search" type="search" placeholder="Suchen… (Datum, Tag, Dienst, Hinweis)" aria-label="Tabelle durchsuchen">`);
+    }
+    if(!bar.querySelector('#tableSearchClear')){
+      const btn=document.createElement('button');
+      btn.id='tableSearchClear'; btn.type='button';
+      btn.className='px-2 py-1 border rounded text-sm hover:bg-gray-50';
+      btn.title='Suche leeren'; btn.textContent='Leeren';
+      bar.querySelector('.left')?.appendChild(btn);
+    }
+    if(!bar.querySelector('#tableCount')){
+      const span=document.createElement('span'); span.id='tableCount'; span.className='table-count';
+      bar.querySelector('.left')?.appendChild(span);
+    }
   }
-});
+}
 
-/* ===== Reset ===== */
-document.getElementById('btnReset').addEventListener('click', () => {
-  $('#anzahl_reihen').value = '1';
-  clearFieldError($('#ov_name'));
-  clearFieldError($('#bundesland'));
-  $('#tabelleBody').innerHTML = '';
-  $('#ergebnisTabelle').classList.add('hidden');
-  $('#ergebnisTitel').classList.add('hidden');
-  $('#ergebnisDivider').classList.add('hidden');
-  toggleExportButtons(false);
-  updateResultsButtonVisibility();
+/* === Suche & Sortierung === */
+let tableSortState = { col: null, dir: 'asc' };
 
-  updateTerminreihen({ fresh:true }); applyDateBounds(); updateDateHints();
+function parseDateCell(s){
+  const m=String(s).trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if(!m) return 0;
+  const d=new Date(Number(m[3]), Number(m[2])-1, Number(m[1])); return d.getTime()||0;
+}
+const wdayIndex={ 'Sonntag':0,'Montag':1,'Dienstag':2,'Mittwoch':3,'Donnerstag':4,'Freitag':5,'Samstag':6 };
 
-  const jahr=new Date().getFullYear();
-  document.querySelectorAll('#terminreihen-container .terminreihe').forEach(reihe=>{
-    const sd=reihe.querySelector('.dienst_start'); const ed=reihe.querySelector('.dienst_ende');
-    if (sd){ sd.value=`${jahr}-01-01`; delete sd.dataset.manual; setAutoBadgeFor(sd,true); clearFieldError(sd); }
-    if (ed){ ed.value=`${jahr}-12-31`; delete ed.dataset.manual; setAutoBadgeFor(ed,true); clearFieldError(ed); }
-    const st=reihe.querySelector('.dienst_startzeit'); const en=reihe.querySelector('.dienst_endzeit');
-    if (st){ delete st.dataset.manual; clearFieldError(st); }
-    if (en){ delete en.dataset.manual; clearFieldError(en); }
-    reihe.querySelectorAll('.error-msg').forEach(p=>{ p.style.display='none'; p.textContent=''; });
-    reihe.querySelectorAll('.error-field').forEach(el=>el.classList.remove('error-field'));
+function cellKey(tr,col){
+  const td=tr.cells[col]; if(!td) return '';
+  const txt=td.innerText.trim();
+  if(col===0) return parseDateCell(txt);
+  if(col===1) return wdayIndex[txt] ?? 9;
+  if(col===3){ const m=txt.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/); if(!m) return 0; return Number(m[1])*6000+Number(m[2])*100+Number(m[3])*10+Number(m[4]); }
+  return txt.replace(/^Entfällt:\s*/i,'').toLowerCase();
+}
+function sortTableBy(col){
+  const table=$('#ergebnisTabelle'); const tbody=$('#tabelleBody'); if(!table||!tbody) return;
+  const rows=Array.from(tbody.rows);
+  if(tableSortState.col===col){ tableSortState.dir=(tableSortState.dir==='asc')?'desc':'asc'; }
+  else { tableSortState.col=col; tableSortState.dir='asc'; }
+  rows.sort((a,b)=>{ const ka=cellKey(a,col), kb=cellKey(b,col); if(ka<kb) return tableSortState.dir==='asc'?-1:1; if(ka>kb) return tableSortState.dir==='asc'?1:-1; return 0; });
+  rows.forEach(r=>tbody.appendChild(r));
+  table.querySelectorAll('thead th').forEach((th,i)=>{ th.classList.remove('sorted-asc','sorted-desc'); if(i===col) th.classList.add(tableSortState.dir==='asc'?'sorted-asc':'sorted-desc'); });
+}
+function attachTableSorting(){
+  const thead=$('#ergebnisTabelle thead'); if(!thead) return;
+  thead.querySelectorAll('th').forEach((th,idx)=>{
+    if(!th.classList.contains('sortable')){
+      th.classList.add('sortable'); const ind=document.createElement('span'); ind.className='sort-ind'; ind.setAttribute('aria-hidden','true'); ind.textContent='▾';
+      th.style.position='relative'; th.appendChild(ind); th.tabIndex=0; th.title='Klicken zum Sortieren';
+      th.addEventListener('click', ()=>sortTableBy(idx));
+      th.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); sortTableBy(idx);} });
+    }
   });
+}
+function applySearchFilter(q){
+  const tbody=$('#tabelleBody'); if(!tbody) return;
+  const query=String(q||'').toLowerCase().trim(); let visible=0, total=0;
+  Array.from(tbody.rows).forEach(tr=>{ total++; const text=tr.innerText.toLowerCase(); const match=!query||text.includes(query); tr.classList.toggle('row-hidden', !match); if(match) visible++; });
+  const countEl=$('#tableCount'); if(countEl) countEl.textContent = visible===total ? `${total} Einträge` : `${visible} / ${total} Einträge`;
+  let nr=$('#noResultsRow'); const card=$('.table-card')||$('#ergebnisTabelle')?.parentElement;
+  if(!nr && card){ nr=document.createElement('div'); nr.id='noResultsRow'; nr.className='no-results'; nr.style.display='none'; nr.textContent='Keine Treffer.'; card.appendChild(nr); }
+  if(nr) nr.style.display=(visible===0)?'':'none';
+}
+function attachSearch(){
+  ensureTableToolbar();
+  const input=$('#tableSearch'); const clearBtn=$('#tableSearchClear');
+  if(input){ input.value=''; input.addEventListener('input', ()=>applySearchFilter(input.value)); }
+  if(clearBtn && input){ clearBtn.addEventListener('click', ()=>{ input.value=''; applySearchFilter(''); input.focus(); }); }
+}
+function attachTableFeatures(){
+  attachSearch();
+  attachTableSorting();
+  // Standardsortierung: Datum ASC
+  tableSortState = { col: null, dir: 'asc' };
+  sortTableBy(0); // ASC
+  applySearchFilter('');
+}
 
-  applyAutoBadgesForDates(); applyAutoBadgesForTimes();
-  updateToTopVisibility();
-});
+/* === Reset Termine === */
+function clearAllFieldErrors(){
+  document.querySelectorAll('.error-field').forEach(el=>{
+    el.classList.remove('error-field'); el.removeAttribute('aria-invalid');
+  });
+  document.querySelectorAll('.error-msg').forEach(p=>{
+    p.style.display='none'; p.textContent='';
+  });
+}
 
-/* ===== Exporte (CSV/ICS/PDF/XLSX) ===== */
+function resetTermine(){
+  // Terminreihen neu aufsetzen (Defaults) – Anzahl beibehalten
+  updateTerminreihen({ fresh: true });
+  applyDateBounds();
+  applyAutoBadgesForDates();
+  applyAutoBadgesForTimes();
+  updateGlobalHints();
+
+  // Ergebnisse leeren & ausblenden
+  const tbody = document.getElementById('tabelleBody');
+  if (tbody) tbody.innerHTML = '';
+  document.getElementById('ergebnisTabelle')?.classList.add('hidden');
+  document.getElementById('ergebnisTitel')?.classList.add('hidden');
+  document.getElementById('ergebnisDivider')?.classList.add('hidden');
+
+  // Suchfeld leeren, Zähler zurücksetzen, Toolbar ausblenden
+  const search = document.getElementById('tableSearch');
+  if (search) search.value = '';
+  try { applySearchFilter(''); } catch(_) {}
+  updateToolbarVisibility?.();
+
+  // Exporte deaktivieren, Floating-Buttons aktualisieren
+  toggleExportButtons(false);
+  updateResultsButtonVisibility?.();
+  updateExportButtonVisibility?.();
+
+  // Fehlermarkierungen entfernen
+  clearAllFieldErrors();
+}
+
+// Click-Handler registrieren
+document.getElementById('btnReset').addEventListener('click', resetTermine);
+    
+    
+/* ========= Export-Helfer ========= */
+function getCleanHeaderTexts(table){
+  const ths = table?.querySelectorAll('thead th') || [];
+  return [...ths].map(th=>{
+    const clone = th.cloneNode(true);
+    clone.querySelectorAll('.sort-ind').forEach(el=>el.remove());
+    return (clone.textContent||'').replace(/[▾▴▼▲]/g,'').trim();
+  });
+}
+function readRowExportValues(tr){
+  const tds = tr.querySelectorAll('td');
+  const dateDisplay = tds[0]?.innerText.trim() || '';
+  const weekday     = tds[1]?.innerText.trim() || '';
+  const dienstRaw   = tr.dataset.dienstRaw || (tds[2]?.innerText.trim() || '');
+  const timeStart   = tr.dataset.timeStart || (tds[3]?.innerText.split(' - ')[0]?.trim() || '');
+  const timeEnd     = tr.dataset.timeEnd   || (tds[3]?.innerText.split(' - ')[1]?.trim() || '');
+  const hint        = tr.dataset.hint || '';
+  return { dateDisplay, weekday, dienstRaw, timeStart, timeEnd, hint };
+}
+function displayTimeRange(s,e){ return (s&&e) ? `${s} - ${e}` : ''; }
+
+/* ========= Export: CSV ========= */
+function csvLine(arr,sep){ return arr.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(sep); }
+function sanitizeFileName(name){ return (name||'OV').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'')||'OV'; }
+function getPlanYearsFromTable(){
+  const cells=document.querySelectorAll('#tabelleBody tr td:first-child'); const years=new Set();
+  cells.forEach(td=>{ const p=(td.innerText||'').split('.'); const y=p[2]; if(y) years.add(y); });
+  if(!years.size) return ''; const arr=[...years].map(n=>parseInt(n,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  return arr.length===1? String(arr[0]) : `${arr[0]}-${arr[arr.length-1]}`;
+}
+function buildBaseFileName(){ const ov=sanitizeFileName($('#ov_name')?.value||'OV'); const years=getPlanYearsFromTable()||String(new Date().getFullYear()); return `dienstplan_${ov}_${years}`; }
+
 function exportCsv(){
-  const table=$('#ergebnisTabelle'); const thead=table?.querySelector('thead'); const tbody=table?.querySelector('tbody');
-  if (!tbody || !tbody.rows.length) return;
+  const table=$('#ergebnisTabelle'), tbody=$('#tabelleBody'); if(!tbody||!tbody.rows.length) return;
   const ovName=$('#ov_name').value || 'Unbekannter Ortsverband';
   const SEP=';', EOL='\r\n';
-  const lines=['sep=' + SEP, csvLine(['Ortsverband:', ovName], SEP)];
-  const headerCells=[...(thead?.querySelectorAll('th')||[])].map(th=>th.innerText.trim());
-  if (headerCells.length) lines.push(csvLine(headerCells, SEP));
-  [...tbody.rows].forEach(tr=>{ const cells=[...tr.cells].map(td=>td.innerText.trim()); lines.push(csvLine(cells, SEP)); });
-  const blob=new Blob(['\ufeff' + lines.join(EOL)], {type:'text/csv;charset=utf-8;'});
+  const lines=['sep='+SEP, csvLine(['Ortsverband:', ovName], SEP)];
+  const header=getCleanHeaderTexts(table); if(header.length) lines.push(csvLine(header, SEP));
+
+  [...tbody.rows].forEach(tr=>{
+    const r=readRowExportValues(tr);
+    const row=[r.dateDisplay, r.weekday, r.dienstRaw, displayTimeRange(r.timeStart,r.timeEnd), r.hint];
+    lines.push(csvLine(row, SEP));
+  });
+
+  const blob=new Blob(['\ufeff'+lines.join(EOL)], {type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=buildBaseFileName()+'.csv'; a.click();
 }
+
+/* ========= Export: ICS ========= */
 function icsEscape(s){ if(!s) return ''; return String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,'); }
-function foldICSLines(lines){ const out=[]; for (const line of lines){ const max=75; if (line.length<=max){ out.push(line); continue; } let i=0; while(i<line.length){ const chunk=line.slice(i,i+max); out.push((i===0?'':' ')+chunk); i+=max; } } return out; }
+function foldICSLines(lines){ const out=[]; for(const line of lines){ const max=75; if(line.length<=max){ out.push(line); continue; } let i=0; while(i<line.length){ const chunk=line.slice(i,i+max); out.push((i===0?'':' ')+chunk); i+=max; } } return out; }
 function exportIcs(){
-  const rows=document.querySelectorAll('#tabelleBody tr'); if (!rows.length) return;
+  const rows=document.querySelectorAll('#tabelleBody tr'); if(!rows.length) return;
   const ovName=$('#ov_name').value || 'Unbekannter Ortsverband';
-  const vtimezone=[
-    'BEGIN:VTIMEZONE','TZID:Europe/Berlin','X-LIC-LOCATION:Europe/Berlin',
-    'BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT',
-    'BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD',
-    'END:VTIMEZONE'
-  ].join('\r\n');
-  const calLines=['BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','PRODID:-//THW Dienstplan Generator//DE'];
-  calLines.push(vtimezone);
-  rows.forEach(row=>{
-    const cols=[...row.querySelectorAll('td')].map(td=>td.innerText);
-    const [datum,,dienst,uhrzeit,feiertagName]=cols;
-    const [startzeit,endzeit]=(uhrzeit||'').split(' - ');
-    const [tag,monat,jahr]=(datum||'').split('.');
-    if (!jahr || !startzeit || !endzeit) return;
-    const start=`${jahr}${monat}${tag}T${startzeit.replace(':','')}00`;
-    const end  =`${jahr}${monat}${tag}T${endzeit.replace(':','')}00`;
-    const uid=`${jahr}${monat}${tag}-${Math.random().toString(36).slice(2)}@thw-dienstplan`;
-    const dtstamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
-    const ve=['BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${dtstamp}`,`SUMMARY:${icsEscape(dienst)}`,`LOCATION:${icsEscape(ovName)}`,`DTSTART;TZID=Europe/Berlin:${start}`,`DTEND;TZID=Europe/Berlin:${end}`];
-    if ((dienst||'').includes('Entfällt')){ ve.push('STATUS:CANCELLED'); if (feiertagName) ve.push(`DESCRIPTION:${icsEscape('Termin fällt aus wegen: ' + feiertagName)}`); }
-    else if (feiertagName){ ve.push(`DESCRIPTION:${icsEscape('Hinweis: ' + feiertagName)}`); }
-    ve.push('END:VEVENT'); calLines.push(...foldICSLines(ve));
+  const vtimezone=['BEGIN:VTIMEZONE','TZID:Europe/Berlin','X-LIC-LOCATION:Europe/Berlin','BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT','BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD','END:VTIMEZONE'].join('\r\n');
+  const cal=['BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','PRODID:-//DienstOrbit//DE', vtimezone];
+
+  rows.forEach(tr=>{
+    const r=readRowExportValues(tr);
+    const [tag,monat,jahr]=(r.dateDisplay||'').split('.');
+    if(!jahr||!r.timeStart||!r.timeEnd) return;
+    const start=`${jahr}${monat}${tag}T${r.timeStart.replace(':','')}00`;
+    const end  =`${jahr}${monat}${tag}T${r.timeEnd.replace(':','')}00`;
+    const uid=`${jahr}${monat}${tag}-${Math.random().toString(36).slice(2)}@dienstorbit`;
+    const dtstamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+
+    const ve=['BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${dtstamp}`,`SUMMARY:${icsEscape(r.dienstRaw)}`,`LOCATION:${icsEscape(ovName)}`,`DTSTART;TZID=Europe/Berlin:${start}`,`DTEND;TZID=Europe/Berlin:${end}`];
+
+    if(/^Entfällt:\s*/i.test(r.dienstRaw)){
+      ve.push('STATUS:CANCELLED');
+      if(r.hint) ve.push(`DESCRIPTION:${icsEscape('Termin fällt aus wegen: '+r.hint)}`);
+    } else if(r.hint){
+      ve.push(`DESCRIPTION:${icsEscape('Hinweis: '+r.hint)}`);
+    }
+    ve.push('END:VEVENT'); cal.push(...foldICSLines(ve));
   });
-  calLines.push('END:VCALENDAR');
-  const ics=calLines.join('\r\n');
-  const blob=new Blob([ics], {type:'text/calendar;charset=utf-8;'});
+
+  cal.push('END:VCALENDAR');
+  const blob=new Blob([cal.join('\r\n')], {type:'text/calendar;charset=utf-8;'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=buildBaseFileName()+'.ics'; a.click();
 }
 
-/* ===== PDF (modern & kompakter, Überschrift je Seite, Footer ohne langen Hinweis) ===== */
+/* ========= Export: PDF ========= */
 function exportPdf(){
   const ovName=$('#ov_name').value || 'Unbekannter Ortsverband';
-  const table=$('#ergebnisTabelle'); const rows=document.querySelectorAll('#tabelleBody tr');
-  if (!rows.length || !table) return;
+  const table=$('#ergebnisTabelle'); const rows=document.querySelectorAll('#tabelleBody tr'); if(!rows.length||!table) return;
 
   const years=getPlanYearsFromTable() || new Date().getFullYear().toString();
-  const head=[...table.querySelectorAll('thead th')].map(th=>th.innerText.trim());
-  const body=[...table.querySelectorAll('tbody tr')].map(tr => [...tr.cells].map(td=>td.innerText.trim()));
+  const head=getCleanHeaderTexts(table);
 
-  async function loadJsPDF(){
-    if (window.jspdf?.jsPDF && typeof window.jspdf.jsPDF==='function' && window.jspdf.jsPDF.API?.autoTable) return true;
-    const sources=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'];
-    const sourcesAT=['https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js','https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
-    const tryLoad = src => new Promise(res=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.crossOrigin='anonymous'; const t=setTimeout(()=>res(false),7000); s.onload=()=>{clearTimeout(t);res(true)}; s.onerror=()=>{clearTimeout(t);res(false)}; document.head.appendChild(s); });
-    let ok=false; for (const src of sources){ ok=await tryLoad(src); if (ok) break; } if (!ok) return false;
-    ok=false; for (const src of sourcesAT){ ok=await tryLoad(src); if (ok) break; } return ok;
+  const body=[...rows].map(tr=>{
+    const r=readRowExportValues(tr);
+    return [r.dateDisplay, r.weekday, r.dienstRaw, displayTimeRange(r.timeStart, r.timeEnd), r.hint];
+  });
+
+  function loadJsPDF(){
+    return new Promise(async resolve=>{
+      if(window.jspdf?.jsPDF && window.jspdf.jsPDF.API?.autoTable) return resolve(true);
+      const js=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+      const at=['https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js','https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
+      const tryLoad=src=>new Promise(res=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.crossOrigin='anonymous'; const t=setTimeout(()=>res(false),7000); s.onload=()=>{clearTimeout(t); res(true)}; s.onerror=()=>{clearTimeout(t); res(false)}; document.head.appendChild(s); });
+      let ok=false; for(const u of js){ ok=await tryLoad(u); if(ok) break; } if(!ok) return resolve(false);
+      ok=false; for(const u of at){ ok=await tryLoad(u); if(ok) break; } resolve(ok);
+    });
   }
 
   (async ()=>{
-    const loaded=await loadJsPDF();
-    if (!loaded || !window.jspdf?.jsPDF){ alert('Konnte jsPDF nicht laden. Evtl. blockiert ein Adblocker/Firewall die CDNs.'); return; }
-    const { jsPDF } = window.jspdf;
-    const doc=new jsPDF({ unit:'pt', format:'a4' });
-    const pageWidth=doc.internal.pageSize.getWidth();
-
-    // kompakterer Header / Tabellenstart
-    const headerHeight = 60;
-    const startYTable  = 100;
+    const loaded=await loadJsPDF(); if(!loaded||!window.jspdf?.jsPDF){ alert('Konnte jsPDF nicht laden.'); return; }
+    const { jsPDF }=window.jspdf; const doc=new jsPDF({ unit:'pt', format:'a4' });
+    const pageWidth=doc.internal.pageSize.getWidth(); const pageHeight=doc.internal.pageSize.getHeight();
 
     const headStyles={ fillColor:[239,246,255], textColor:[30,58,138], lineColor:[229,231,235], lineWidth:0.8, halign:'left', fontSize:9 };
     const bodyStyles={ lineColor:[229,231,235], lineWidth:.4, textColor:[22,22,22], fontSize:9, cellPadding:4 };
     const altRowStyles={ fillColor:[249,250,251] };
-    const columnStyles={ 0:{ cellWidth:90 }, 1:{ cellWidth:70 }, 2:{ cellWidth:'auto' }, 3:{ cellWidth:78 }, 4:{ cellWidth:140 } };
+    const columnStyles={ 0:{ cellWidth:90 }, 1:{ cellWidth:70 }, 2:{ cellWidth:'auto' }, 3:{ cellWidth:78 }, 4:{ cellWidth:160 } };
+
+    const haveLogo = !!window.brandLogoDataUrl;
+    const headerBandH = haveLogo ? 60 : 40;            // vorher 76 / 46; = Höhe des farbigen Header-Bandes in Punkten (pt) → erste Zahl wenn ein Logo da ist, zweite Zahl ohne Logo.
+    const startYTable = headerBandH + (haveLogo ? 10 : 10); // vorher 32 / 15; = Abstand unter dem Header zur Tabelle (Start-Y der Tabelle minus Headerhöhe)
+
 
     doc.autoTable({
       head:[head], body,
       startY:startYTable,
-      margin:{ left:40, right:40, top:startYTable, bottom:60 },
+      margin:{ left:40, right:40, top:startYTable, bottom:58 },
       styles:bodyStyles, headStyles, alternateRowStyles:altRowStyles, columnStyles,
-      didParseCell: (data) => {
-        if (data.section === 'body') {
-          const rowVals = data.row.raw || [];
-          const dienst = rowVals[2] || '';
-          const feiertagText = rowVals[4] || '';
-          if (feiertagText) { data.cell.styles.fillColor = [255,247,237]; data.cell.styles.textColor=[0,0,0]; }
-          if (typeof dienst === 'string' && dienst.includes('Entfällt')) {
-            data.cell.styles.textColor = [220,38,38];
-            if (!feiertagText) data.cell.styles.fillColor = [254,242,242];
-          }
+      didParseCell:(data)=>{
+        if(data.section==='body'){
+          const dienst=data.row.raw?.[2] || '';
+          const hint  =data.row.raw?.[4] || '';
+          if(hint){ data.cell.styles.fillColor=[255,247,237]; data.cell.styles.textColor=[0,0,0]; }
+          if(/^Entfällt:\s*/i.test(dienst)){ data.cell.styles.textColor=[220,38,38]; if(!hint) data.cell.styles.fillColor=[254,242,242]; }
         }
       }
     });
 
-    // Kopf + Fuß pro Seite (Überschrift auf allen Seiten)
     const pageCount=doc.internal.getNumberOfPages();
-    for (let i=1;i<=pageCount;i++){
+    for(let i=1;i<=pageCount;i++){
       doc.setPage(i);
-      doc.setFillColor(30,64,175); // blue-800
-      doc.rect(0,0,pageWidth,headerHeight,'F');
+      doc.setFillColor(245,249,255); doc.rect(0,0,pageWidth,headerBandH,'F');
+      doc.setDrawColor(229,231,235); doc.setLineWidth(0.8); doc.line(40, headerBandH-2, pageWidth-40, headerBandH-2);
 
-      doc.setFont('helvetica','bold'); doc.setTextColor(255); doc.setFontSize(15);
-      doc.text(`Dienstplan – ${ovName}`, pageWidth/2, 30, { align:'center' });
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const subtitle = [years, getBundeslandText()].filter(Boolean).join(' • ');
-      if (subtitle) doc.text(subtitle, pageWidth/2, 46, { align:'center' });
+      if(haveLogo){
+        const ratio=(brandNatural.w>0 && brandNatural.h>0)?(brandNatural.w/brandNatural.h):4;
+        const maxH=38, maxW=pageWidth*0.42; let drawH=maxH, drawW=Math.min(maxW, drawH*ratio);
+        if(drawW>maxW){ drawW=maxW; drawH=drawW/ratio; }
+        try{ doc.addImage(window.brandLogoDataUrl,'PNG',40,18,drawW,drawH,undefined,'FAST'); }catch(_){}
+      } else { doc.setFont('helvetica','bold'); doc.setTextColor(30,58,138); doc.setFontSize(14); doc.text('DienstOrbit',40,30,{align:'left'}); }
 
-      // Fußbereich (ohne langen Nutzungs-Hinweis)
-      const pageHeight=doc.internal.pageSize.getHeight();
-      const yBase = pageHeight - 28;
-      doc.setDrawColor(229,231,235); doc.setLineWidth(0.8);
-      doc.line(40, yBase - 18, pageWidth - 40, yBase - 18);
+      doc.setFont('helvetica','normal'); doc.setTextColor(30,58,138); doc.setFontSize(11);
+      const headerRight=[`Dienstplan für ${ovName}`, years || ''].filter(Boolean).join(' • ');
+      doc.text(headerRight, pageWidth-40, 32, { align:'right' });
+
+      const yBase=pageHeight-26;
+      doc.setDrawColor(229,231,235); doc.setLineWidth(0.8); doc.line(40, yBase-16, pageWidth-40, yBase-16);
       doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
       doc.text(`Erstellt am ${new Date().toLocaleString('de-DE')}`, 40, yBase);
-      doc.text('© 2025 Wolfgang Saal', pageWidth/2, yBase, { align:'center' });
-      doc.text(`Seite ${i} / ${pageCount}`, pageWidth - 40, yBase, { align:'right' });
+      doc.text('© 2025 DienstOrbit – Wolfgang Saal', pageWidth/2, yBase, { align:'center' });
+      doc.text(`Seite ${i} / ${pageCount}`, pageWidth-40, yBase, { align:'right' });
     }
-
     doc.save(`${buildBaseFileName()}.pdf`);
   })();
 }
 
-/* ===== Excel ===== */
+/* ========= Export: Excel ========= */
 async function exportXlsx(){
-  const table=$('#ergebnisTabelle'); const tbody=$('#tabelleBody');
-  if (!tbody || !tbody.rows.length) return;
+  const tbody=$('#tabelleBody'); if(!tbody||!tbody.rows.length) return;
 
   async function loadSheetJS(){
-    if (typeof window.XLSX!=='undefined') return true;
-    const sources=['https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js'];
-    const tryLoad=src=>new Promise(resolve=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.crossOrigin='anonymous';
-      s.onload=()=>requestAnimationFrame(()=>resolve(typeof window.XLSX!=='undefined')); s.onerror=()=>resolve(false);
-      const t=setTimeout(()=>resolve(false),7000); s.addEventListener('load',()=>clearTimeout(t)); s.addEventListener('error',()=>clearTimeout(t)); document.head.appendChild(s);
-    });
-    for (const src of sources){ if (await tryLoad(src)) return true; }
-    return false;
+    if(typeof window.XLSX!=='undefined') return true;
+    const srcs=['https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js'];
+    const tryLoad=src=>new Promise(res=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.crossOrigin='anonymous'; const t=setTimeout(()=>res(false),7000); s.onload=()=>{clearTimeout(t); res(typeof window.XLSX!=='undefined')}; s.onerror=()=>{clearTimeout(t); res(false)}; document.head.appendChild(s); });
+    for(const u of srcs){ if(await tryLoad(u)) return true; } return false;
   }
+  const loaded=await loadSheetJS(); if(!loaded){ alert('Konnte SheetJS nicht laden.'); return; }
 
-  const loaded=await loadSheetJS();
-  if (!loaded){ alert('Konnte SheetJS nicht laden. Mögliche Ursachen: Firewall/Adblock/CSP.'); return; }
-
-  try {
-    const XLSX=window.XLSX;
-    const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.table_to_sheet(table, { raw:true });
-
-    const colWidths=[];
-    const data=XLSX.utils.sheet_to_json(ws,{header:1});
-    data.forEach(row=>row.forEach((cell, idx)=>{ const len=cell ? cell.toString().length : 0; colWidths[idx]=Math.max(colWidths[idx]||10, len+2); }));
-    ws['!cols']=colWidths.map(w=>({ wch:w }));
+  try{
+    const XLSX=window.XLSX, wb=XLSX.utils.book_new();
+    const header=getCleanHeaderTexts($('#ergebnisTabelle'));
+    const data=[ ...tbody.rows ].map(tr=>{
+      const r=readRowExportValues(tr);
+      return [r.dateDisplay, r.weekday, r.dienstRaw, displayTimeRange(r.timeStart,r.timeEnd), r.hint];
+    });
+    const ws=XLSX.utils.aoa_to_sheet([header, ...data]);
+    const colWidths=[]; [header, ...data].forEach(row=>row.forEach((cell,i)=>{ const len=(cell?cell.toString(): '').length; colWidths[i]=Math.max(colWidths[i]||10, len+2); }));
+    ws['!cols']=colWidths.map(w=>({wch:w}));
     XLSX.utils.book_append_sheet(wb, ws, 'Dienstplan');
 
-    try { XLSX.writeFile(wb, `${buildBaseFileName()}.xlsx`, { compression:true }); }
-    catch (e) {
-      const out=XLSX.write(wb, { bookType:'xlsx', type:'array', compression:true });
-      const blob=new Blob([out], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${buildBaseFileName()}.xlsx`; document.body.appendChild(a); a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    }
-  } catch(err){ console.error('Excel-Export fehlgeschlagen:', err); alert('Excel-Export fehlgeschlagen. Details in der Konsole.'); }
+    try{ XLSX.writeFile(wb, `${buildBaseFileName()}.xlsx`, { compression:true }); }
+    catch{ const out=XLSX.write(wb,{bookType:'xlsx', type:'array', compression:true}); const blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${buildBaseFileName()}.xlsx`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  }catch(err){ console.error(err); alert('Excel-Export fehlgeschlagen. Details in der Konsole.'); }
 }
 
+/* ========= Buttons / Sichtbarkeit ========= */
 document.getElementById('btnCsv').addEventListener('click', exportCsv);
 document.getElementById('btnPdf').addEventListener('click', exportPdf);
 document.getElementById('btnIcs').addEventListener('click', exportIcs);
 document.getElementById('btnXlsx').addEventListener('click', exportXlsx);
 
-/* ===== Floating Buttons Verhalten ===== */
-const btnToTop = $('#btnToTop');
-const btnToResults = $('#btnToResults');
-const btnToExport = $('#btnToExport');
+const btnToTop=$('#btnToTop'), btnToResults=$('#btnToResults'), btnToExport=$('#btnToExport');
+function hasResultsVisible(){ return !$('#ergebnisTabelle').classList.contains('hidden'); }
+function mostlyInViewport(el){ if(!el) return false; const r=el.getBoundingClientRect(); const vh=window.innerHeight||document.documentElement.clientHeight; const vis=Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)); return vis >= (r.height*0.6); }
+function updateToTopVisibility(){ btnToTop.classList.toggle('show', window.scrollY>200); }
+function updateResultsButtonVisibility(){ const show=hasResultsVisible() && !mostlyInViewport($('#ergebnisTitel')); btnToResults.classList.toggle('show', !!show); }
+function updateExportButtonVisibility(){ const enabled = !$('#btnCsv').disabled || !$('#btnPdf').disabled || !$('#btnIcs').disabled || !$('#btnXlsx').disabled; btnToExport.classList.toggle('show', enabled); }
 
-function hasResultsVisible(){
-  return !$('#ergebnisTabelle').classList.contains('hidden');
-}
-function updateToTopVisibility(){
-  btnToTop.classList.toggle('show', window.scrollY > 200);
-}
-function updateResultsButtonVisibility(){
-  const show = hasResultsVisible() && !mostlyInViewport($('#ergebnisTitel'));
-  btnToResults.classList.toggle('show', !!show);
-}
-function updateExportButtonVisibility(){
-  // Export-Button immer zeigen, wenn Export-Buttons aktiviert sind
-  const enabled = !$('#btnCsv').disabled || !$('#btnPdf').disabled || !$('#btnIcs').disabled || !$('#btnXlsx').disabled;
-  btnToExport.classList.toggle('show', enabled);
-}
+window.addEventListener('scroll', ()=>{ updateToTopVisibility(); updateResultsButtonVisibility(); }, { passive:true });
+window.addEventListener('resize', ()=>{ updateToTopVisibility(); updateResultsButtonVisibility(); });
 
-window.addEventListener('scroll', () => { updateToTopVisibility(); updateResultsButtonVisibility(); }, { passive:true });
-window.addEventListener('resize', () => { updateToTopVisibility(); updateResultsButtonVisibility(); });
+btnToTop.addEventListener('click', ()=>{ window.scrollTo({ top:0, behavior: prefersReduced?'auto':'smooth' }); try{ $('#pageTop').focus({preventScroll:true}); }catch{} });
+btnToResults.addEventListener('click', ()=>{ const a=$('#ergebnisTitel'); if(a && hasResultsVisible()){ a.scrollIntoView({ behavior: prefersReduced?'auto':'smooth', block:'start' }); try{ a.focus({preventScroll:true}); }catch{} }});
+btnToExport.addEventListener('click', ()=>{ $('#exportButtons')?.scrollIntoView({ behavior: prefersReduced?'auto':'smooth', block:'start' }); });
 
-btnToTop.addEventListener('click', () => {
-  window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
-  const topEl = $('#pageTop'); if (topEl) { try { topEl.focus({ preventScroll: true }); } catch(e){} }
-});
-btnToResults.addEventListener('click', () => {
-  const anchor = $('#ergebnisTitel');
-  if (anchor && hasResultsVisible()) {
-    anchor.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
-    try { anchor.focus({ preventScroll: true }); } catch(e){}
+const exportObserver=new MutationObserver(()=> updateExportButtonVisibility());
+['#btnCsv','#btnPdf','#btnIcs','#btnXlsx'].forEach(sel=>{ const el=$(sel); if(el) exportObserver.observe(el,{attributes:true, attributeFilter:['disabled','class']}); });
+
+/* === Termine ermitteln === */
+document.getElementById('btnBerechnen').addEventListener('click', async ()=>{
+  try{
+    if (!validateInputs()){ toggleExportButtons(false); updateResultsButtonVisibility(); updateToolbarVisibility(); return; }
+
+    const bundesland=$('#bundesland').value;
+    const subdivision=mapBundeslandToSubdivision(bundesland);
+    const dienstAnFeiertagen=$('#feiertagsCheck').checked;
+    const dienstInFerien=$('#ferienCheck').checked;
+
+    const {minYear,maxYear}=getYearBounds();
+    const jahre=new Set();
+    document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(r=>{
+      const s=r.querySelector('.dienst_start').value; const e=r.querySelector('.dienst_ende').value;
+      if(s){ const y=new Date(s).getFullYear(); if(y>=minYear&&y<=maxYear) jahre.add(y); }
+      if(e){ const y2=new Date(e).getFullYear(); if(y2>=minYear&&y2<=maxYear) jahre.add(y2); }
+    });
+    if(jahre.size===0) jahre.add(new Date().getFullYear());
+
+    const [feiertageMap, ferienMap]=await Promise.all([
+      fetchPublicHolidaysForYears([...jahre], subdivision),
+      fetchSchoolHolidaysForYears([...jahre], subdivision)
+    ]);
+
+    const tbody=$('#tabelleBody'); tbody.innerHTML=''; $('#ergebnisTabelle').classList.add('hidden');
+
+    const tagZuIndex={Sonntag:0, Montag:1, Dienstag:2, Mittwoch:3, Donnerstag:4, Freitag:5, Samstag:6};
+    const alleTermine=[];
+
+    document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe=>{
+      const bezO=reihe.querySelector('.dienst_bezeichnung').value;
+      const woch=reihe.querySelector('.dienst_wochentag').value;
+      const turn=reihe.querySelector('.dienst_turnus').value;
+      const mpos =reihe.querySelector('.dienst_monat_position')?.value;
+      const dS=new Date(reihe.querySelector('.dienst_start').value);
+      const dE=new Date(reihe.querySelector('.dienst_ende').value);
+      const tS=reihe.querySelector('.dienst_startzeit').value;
+      const tE=reihe.querySelector('.dienst_endzeit').value;
+
+      let cur=new Date(dS); const ziel=tagZuIndex[woch]; const termine=[];
+      if (turn==='monatlich'){
+        cur.setDate(1);
+        while (cur<=dE){
+          const y=cur.getFullYear(), m=cur.getMonth();
+          const first=new Date(y,m,1), last=new Date(y,m+1,0);
+          const tage=[]; for(let d=new Date(first); d<=last; d.setDate(d.getDate()+1)) if(d.getDay()===ziel) tage.push(new Date(d));
+          const idx=(mpos==='-1')? (tage.length-1): (parseInt(mpos||'1',10)-1);
+          if(idx>=0 && idx<tage.length){ const ch=tage[idx]; if(ch>=dS && ch<=dE) termine.push(ch); }
+          cur=new Date(y,m+1,1);
+        }
+      } else {
+        while(cur.getDay()!==ziel) cur.setDate(cur.getDate()+1);
+        while(cur<=dE){ if(cur>=dS) termine.push(new Date(cur)); cur.setDate(cur.getDate() + (turn==='2woechentlich'?14:7)); }
+      }
+
+      for (const d of termine){
+        const iso=ymd(d);
+        const ferienname = ferienMap[iso] || '';
+        const feiertag   = feiertageMap[iso] || '';
+
+        let bezeichnung=bezO; let hintType=''; let hintText='';
+
+        if(!dienstInFerien && ferienname){ bezeichnung=`Entfällt: ${bezO}`; hintType='Ferien';    hintText=ferienname; }
+        else if(!dienstAnFeiertagen && feiertag){ bezeichnung=`Entfällt: ${bezO}`; hintType='Feiertag'; hintText=feiertag; }
+        else if(feiertag){ hintType='Feiertag'; hintText=feiertag; }
+
+        alleTermine.push({ datum:d, iso, bezeichnung, zeitStart:tS, zeitEnde:tE, hintType, hintText });
+      }
+    });
+
+    // Sortieren (Datum)
+    alleTermine.sort((a,b)=>a.datum - b.datum);
+
+    // Rendern
+    alleTermine.forEach(x=>{
+      const tr=document.createElement('tr');
+
+      tr.dataset.dateIso   = x.iso;
+      tr.dataset.dienstRaw = x.bezeichnung;
+      tr.dataset.hint      = x.hintText || '';
+      tr.dataset.timeStart = x.zeitStart || '';
+      tr.dataset.timeEnd   = x.zeitEnde  || '';
+
+      if(x.hintText) tr.classList.add('feiertag-row');
+      const day=x.datum.getDay(); if(day===0||day===6) tr.classList.add('wknd');
+
+      const isCancelled=/^Entfällt:\s*/i.test(x.bezeichnung);
+      const dienstTitle=isCancelled? x.bezeichnung.replace(/^Entfällt:\s*/i,'') : x.bezeichnung;
+      const dienstCell=isCancelled ? `${dienstTitle} <span class="chip chip-cancel">Entfällt</span>` : dienstTitle;
+      const hintCell=x.hintText ? `<span class="chip chip-info">${x.hintType}</span> ${x.hintText}` : '';
+
+      tr.innerHTML=`
+        <td class="border px-4 py-2">${String(x.datum.getDate()).padStart(2,'0')}.${String(x.datum.getMonth()+1).padStart(2,'0')}.${x.datum.getFullYear()}</td>
+        <td class="border px-4 py-2">${['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][day]}</td>
+        <td class="border px-4 py-2">${dienstCell}</td>
+        <td class="border px-4 py-2">${displayTimeRange(x.zeitStart, x.zeitEnde)}</td>
+        <td class="border px-4 py-2">${hintCell}</td>`;
+      $('#tabelleBody').appendChild(tr);
+    });
+
+    const hasRows=alleTermine.length>0, tableEl=$('#ergebnisTabelle'), titleEl=$('#ergebnisTitel'), dividerEl=$('#ergebnisDivider');
+    if(hasRows){
+      tableEl.classList.remove('hidden'); titleEl.classList.remove('hidden'); dividerEl.classList.remove('hidden'); toggleExportButtons(true);
+
+      // Toolbar anzeigen, Features aktivieren
+      updateToolbarVisibility();
+      attachTableFeatures();
+
+      requestAnimationFrame(()=>{ titleEl.scrollIntoView({behavior: prefersReduced?'auto':'smooth', block:'start'}); try{ titleEl.focus({preventScroll:true}); }catch{} updateToTopVisibility(); });
+    } else {
+      tableEl.classList.add('hidden'); titleEl.classList.add('hidden'); dividerEl.classList.add('hidden'); toggleExportButtons(false);
+      updateToolbarVisibility();
+      alert('Keine gültigen Termine ermittelt.');
+    }
+  }catch(err){
+    console.error(err);
+    alert('Es ist ein Fehler beim Ermitteln der Termine aufgetreten: ' + (err?.message || err));
   }
 });
-btnToExport.addEventListener('click', () => {
-  const anchor = $('#exportButtons');
-  if (anchor) anchor.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
-});
 
-/* Wenn Exporte aktiviert/deaktiviert werden, Sichtbarkeit anpassen */
-const exportObserver = new MutationObserver(()=> updateExportButtonVisibility());
-['#btnCsv','#btnPdf','#btnIcs','#btnXlsx'].forEach(sel=>{
-  const el=$(sel); if (!el) return;
-  exportObserver.observe(el, { attributes:true, attributeFilter:['disabled','class'] });
-});
-updateExportButtonVisibility();
+/* ========= Buttons / Sichtbarkeit ========= */
+document.getElementById('btnCsv').addEventListener('click', exportCsv);
+document.getElementById('btnPdf').addEventListener('click', exportPdf);
+document.getElementById('btnIcs').addEventListener('click', exportIcs);
+document.getElementById('btnXlsx').addEventListener('click', exportXlsx);
+
+function getBundeslandText(){ const opt=$('#bundesland option:checked'); const t=(opt?.textContent||'').trim(); return t && t!=='Bitte wählen' ? t : ''; }
+
+function mapBundeslandToSubdivision(bl){
+  const m={'BW':'DE-BW','BY':'DE-BY','BE':'DE-BE','BB':'DE-BB','HB':'DE-HB','HH':'DE-HH','HE':'DE-HE','MV':'DE-MV','NI':'DE-NI','NW':'DE-NW','RP':'DE-RP','SL':'DE-SL','SN':'DE-SN','ST':'DE-ST','SH':'DE-SH','TH':'DE-TH'};
+  return m[bl]||'';
+}
+async function fetchPublicHolidaysForYears(years, subdivision){
+  const map={}; const base='https://openholidaysapi.org/PublicHolidays';
+  const qs=(y,useSubdivision=true)=> base+`?countryIsoCode=DE&languageIsoCode=DE&validFrom=${y}-01-01&validTo=${y}-12-31`+(useSubdivision&&subdivision?`&subdivisionCode=${encodeURIComponent(subdivision)}`:'');
+  for(const y of years){
+    try{
+      let res=await fetch(qs(y,true),{ headers:{'accept':'application/json'} }); let data=res.ok?await res.json():null;
+      if(!res.ok || !Array.isArray(data) || data.length===0){ res=await fetch(qs(y,false),{ headers:{'accept':'application/json'} }); data=res.ok?await res.json():[]; }
+      (data||[]).forEach(item=>{ const name=extractName(item) || item?.englishName || ''; const start=item?.startDate || item?.validFrom || item?.date || ''; const end=item?.endDate || item?.validTo || item?.date || ''; addRangeDatesToMap(map,start,end,name); });
+    }catch(e){}
+  }
+  return map;
+}
+async function fetchSchoolHolidaysForYears(years, subdivision){
+  const map={}; if(!subdivision) return map;
+  const base='https://openholidaysapi.org/SchoolHolidays';
+  const qs=(y)=> base+`?countryIsoCode=DE&subdivisionCode=${encodeURIComponent(subdivision)}&languageIsoCode=DE&validFrom=${y}-01-01&validTo=${y}-12-31`;
+  for(const y of years){
+    try{
+      const res=await fetch(qs(y),{ headers:{'accept':'application/json'} }); if(!res.ok) continue;
+      const data=await res.json();
+      (data||[]).forEach(item=>{ const name=extractName(item) || item?.englishName || 'Ferien'; const start=item?.startDate || item?.validFrom || ''; const end=item?.endDate || item?.validTo || start; addRangeDatesToMap(map,start,end,name); });
+    }catch(e){}
+  }
+  return map;
+}
+function extractName(obj){
+  const n=obj?.name; if(!n) return '';
+  if(typeof n==='string') return n;
+  if(Array.isArray(n)){ const de=n.find(x=>x.language==='DE'||x.languageIsoCode==='DE'); return (de?.text||de?.name||n[0]?.text||n[0]?.name||'').toString(); }
+  return String(n);
+}
+function addRangeDatesToMap(map, startStr, endStr, name){
+  if(!startStr) return;
+  const s=ymdToLocalDate(startStr.slice(0,10));
+  const e=ymdToLocalDate((endStr||startStr).slice(0,10));
+  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){
+    const key=ymd(d); map[key]=map[key]? map[key]+' / '+name: name;
+  }
+}
+
+/* ========= Ende ========= */
   </script>
 </body>
 </html>
