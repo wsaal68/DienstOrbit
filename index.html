@@ -918,9 +918,31 @@ function exportPdf(){
         try{ doc.addImage(window.brandLogoDataUrl,'PNG',40,18,drawW,drawH,undefined,'FAST'); }catch(_){}
       } else { doc.setFont('helvetica','bold'); doc.setTextColor(30,58,138); doc.setFontSize(14); doc.text('DienstOrbit',40,30,{align:'left'}); }
 
-      doc.setFont('helvetica','normal'); doc.setTextColor(30,58,138); doc.setFontSize(11);
-      const headerRight=[`Dienstplan für ${ovName}`, years || ''].filter(Boolean).join(' • ');
-      doc.text(headerRight, pageWidth-40, 32, { align:'right' });
+      // Header rechts: "Dienstplan für " (normal) + "<OV> • <Jahr(e)>" (fett)
+      doc.setTextColor(30,58,138);
+      doc.setFontSize(11);
+
+      const prefix   = 'Dienstplan für ';
+      const boldPart = [ovName, years].filter(Boolean).join(' • ');
+
+      // Breiten messen, damit die Gesamtrechtsausrichtung erhalten bleibt
+      doc.setFont('helvetica','normal');
+      const prefixW = doc.getTextWidth(prefix);
+
+      doc.setFont('helvetica','bold');
+      const boldW   = doc.getTextWidth(boldPart);
+
+      const totalW  = prefixW + boldW;
+      const xRight  = pageWidth - 40;
+      const yHeader = 32;
+      const xStart  = xRight - totalW; // linke Startposition so, dass der gesamte Text rechtsbündig endet
+
+      // Zeichnen: erst normal, dann fett
+      doc.setFont('helvetica','normal');
+      doc.text(prefix, xStart, yHeader);
+
+      doc.setFont('helvetica','bold');
+      doc.text(boldPart, xStart + prefixW, yHeader);
 
       const yBase=pageHeight-26;
       doc.setDrawColor(229,231,235); doc.setLineWidth(0.8); doc.line(40, yBase-16, pageWidth-40, yBase-16);
