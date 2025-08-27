@@ -17,6 +17,10 @@ DienstOrbit ist ein Dienstplan-Generator für THW-Ortsverbände und ähnliche Or
 - **Floating Buttons:** Schneller Zugriff auf Tabelle, Export und Seitenanfang.
 - **Lokale Speicherung:** Eingaben werden im Browser gespeichert.
 
+## Installation
+
+Download die index.html und logo_dienstorbit.png und im gleichen Verzeichnis ablegen.
+
 ## Nutzung
 
 1. Öffne die Datei [`index.html`](index.html) in einem modernen Browser.
