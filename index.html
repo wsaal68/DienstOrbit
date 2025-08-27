@@ -1,1366 +1,1425 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DienstOrbit – Dienstplan-Generator</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KoordinatenWerk</title>
 
-  <!-- Meta -->
-  <meta name="application-name" content="DienstOrbit" />
-  <meta name="author" content="Wolfgang Saal" />
-  <meta name="description" content="Dienstplan im Orbit: smart planen, sauber exportieren. DienstOrbit ist ein Dienstplan-Generator mit Berücksichtigung von Ferien & Feiertagen nach Bundesland. Export: CSV, PDF, ICS, Excel." />
-  <meta name="robots" content="index,follow" />
-  <meta name="color-scheme" content="light" />
-  <meta name="theme-color" content="#1e40af" />
+<!-- Favicons -->
+<link rel="icon" type="image/png" href="koordinatenwerk_logo_favicon.png" sizes="64x64">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 
-  <!-- Tailwind (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+<!-- Basis-Metadaten -->
+<meta name="description" content="KoordinatenWerk: Umrechnung von Lat/Lng, UTM, MGRS und DMS. Suchen, finden und messen von Orten – entwickelt für THW OV Bad Bergzabern." />
+<meta name="author" content="Wolfgang 'Wolle' Saal, Böllenborn" />
+<meta name="keywords" content="Koordinaten, GPS, UTM, MGRS, DMS, THW, Bad Bergzabern, Karte, Messen, Geocoding" />
 
-  <style>
-    .error-msg { color:#dc2626;font-size:.8rem;margin-top:.25rem;display:none; }
-    .hint-msg  { color:#6b7280;font-size:.7rem;margin-top:.25rem; }
-    .feiertag-row { background-color:#fff8dc; }
-    .auto-badge{ margin-left:8px;font-size:.70rem;background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:9999px;vertical-align:middle; }
-    .disabled-btn{ opacity:.5;cursor:not-allowed; }
-    .legend-box{ border:1px solid #e5e7eb;background:#f9fafb;border-radius:.75rem;padding:.75rem 1rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-top:.75rem;color:#4b5563;font-size:.7rem; }
-    footer{ border:1px solid #e5e7eb;background:#f9fafb;border-radius:.75rem;padding:.75rem 1rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-top:.75rem;color:#3967a8;text-align:center;font-size:.675rem; }
-    footer a{ color:inherit;text-decoration:underline; }
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    /* Fallback-Sichtbarkeit sicherstellen */
-    .logo-fallback.hidden { display: none !important; }
-    .app-logo .hidden { display: none !important; }
+<!-- proj4 (UTM via +proj-Strings) -->
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.9.2/dist/proj4.js"></script>
 
-    /* === App-Header === */
-    .app-header{
-      border:1px solid #e5e7eb; border-radius:1rem;
-      padding:1rem 1.25rem; margin-bottom:.75rem;
-      background: linear-gradient(135deg,#eff6ff 0%,#ffffff 65%);
-      box-shadow: 0 10px 24px rgba(30,64,175,.08), inset 0 1px 0 rgba(255,255,255,.6);
-    }
-    .app-header-inner{
-      display:grid; grid-template-columns:auto 1fr; gap:1rem; align-items:center;
-    }
-    .app-logo{ position:relative; }
-    .logo-img{
-      display:block;
-      max-height:64px; width:auto; height:auto; object-fit:contain;
-    }
-    .logo-fallback{
-      display:flex; align-items:center; justify-content:center;
-      height:64px; width:64px; border-radius:14px;
-      background:#1e40af; color:#fff; font-weight:800; font-size:1.25rem;
-      box-shadow:0 6px 16px rgba(30,64,175,.25);
-    }
-    .app-title{ margin:0; font-size:clamp(1.25rem,2.1vw + .6rem,2rem); line-height:1.1; font-weight:900; color:#1e40af; }
-    .app-subtitle{ margin-top:.15rem; font-weight:700; color:#1e40af; }
-    .app-subline{ margin-top:.15rem; font-size:.80rem; color:#374151; }
+<style>
+  :root{
+    --panel-w: 460px;
+    --brand: #8fb4ff;
+    --line:  #2b3446;
+    --grid:  #ff0000;             /* Rot */
+    --grid-label: rgb(0,0,160);   /* 0/0/160 */
+    --ctl-h: 40px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial, sans-serif;display:flex;height:100vh;background:#0e1420}
+  .panel{width:var(--panel-w);padding:20px;background:#121821;color:#fff;overflow-y:auto;flex-shrink:0}
+  .card{margin-bottom:18px}
+  .card h2{font-size:16px;margin-bottom:8px;color:var(--brand)}
+  .card h3{font-size:13px;margin:10px 0 6px 0;color:#c9d3e0}
+  .card input,.card select,.card button{
+    width:100%;padding:8px;margin-top:6px;background:#1d2430;color:#fff;border:1px solid #3a4354;border-radius:6px;
+    min-height: var(--ctl-h);
+    transition: background-color .15s ease, transform .12s ease, filter .15s ease, box-shadow .15s ease;
+  }
+  /* Dezenter Hover für alle Buttons */
+  .card button:hover, .copybtn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    color: #8fb4ff;
+  }
 
-    @media (min-width:768px){
-      .app-header-inner{ grid-template-columns:auto 1fr; gap:1.25rem; }
-      .logo-fallback{ height:80px; width:80px; }
-      .logo-img{ max-height:80px; width:auto; height:auto; object-fit:contain; }
-    }
+  .grid{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+  .grid-2{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+  .grid-4{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+  .row{display:grid;grid-template-columns:1fr;gap:8px}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btnrow-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btnrow-3 {display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .map-wrap{flex-grow:1;position:relative}
+  #map{height:100%}
+  small.hint{opacity:.75}
+  label{font-size:12px;color:#c9d3e0;white-space:nowrap}
+  .warn{font-size:12px;color:#ffadad;margin-top:6px}
 
-    /* Collapsible */
-    .chevron{ transition: transform .2s ease; }
-    .chevron[aria-expanded="true"]{ transform: rotate(180deg); }
-    .collapsible { overflow: hidden; transition: max-height .26s ease, opacity .26s ease; opacity: 0; max-height: 0; will-change: max-height, opacity; }
-    .collapsible.open { opacity: 1; }
-    @media (prefers-reduced-motion: reduce) { .collapsible { transition: none; } }
+  /* Header fixiert + farblich abgesetzt */
+  header.brand{
+    position: sticky; top: 0; z-index: 5;
+    display:flex;align-items:center;gap:12px;margin-bottom:14px;
+    background:#0f1626; /* dunkler als Panel */
+    padding-bottom:10px; padding-top:6px;
+    border-top:5px solid var(--line);
+    border-bottom:5px solid var(--line);
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  }
+  header.brand svg{width:56px;height:56px;flex:0 0 auto;display:block}
+  header.brand h1{font-size:20px;line-height:1}
+  header.brand small{opacity:.75;font-size:12px}
 
-    /* Fehlerfelder */
-    .error-field { border-color:#ef4444 !important; box-shadow: 0 0 0 1px rgba(239,68,68,.35) inset; }
-    .error-field:focus { outline: none; box-shadow: 0 0 0 2px rgba(239,68,68,.45) inset; }
+  .divider{border:0;border-top:1px solid var(--line);opacity:.8;margin:12px 0}
 
-    /* Floating Buttons */
-    .float-btn { position: fixed; right: 1.25rem; z-index: 70; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
-    .float-btn.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .to-top     { bottom: 1.25rem; }
-    .to-export  { bottom: 1.25rem; right: 6rem; }
-    .to-results { bottom: 8.25rem; }
-    @media (prefers-reduced-motion: reduce) { .float-btn { transition: none; } }
+  .wch{ width: calc(var(--ch, 14) * 1ch); }
+  input[readonly]{ background:#1b2330; color:#bfcde0; border:1px solid #3a4354; }
 
-    /* === Ergebnis-Tabelle: Card + Optik === */
-    .table-card{
-      border:1px solid #e5e7eb; border-radius:0.75rem;
-      background:#fff; overflow:hidden;
-      box-shadow: 0 6px 24px rgba(17,24,39,.06);
-    }
+  .btnrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  #measureInfo{font-size:12px;opacity:.9;margin-top:8px;line-height:1.4}
+  .modeActive{outline:2px solid #6ea8fe}
 
-    #ergebnisTabelle{ border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; width:100%; }
-    #ergebnisTabelle th, #ergebnisTabelle td{ border-color:#e5e7eb; }
+  .legal-wrap{margin-top:14px}
+  .legal{
+    margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+    background:#0f1622; font-size:12px;opacity:.95;display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .legal a{color:var(--brand);text-decoration:none}
+  .legal a:hover{text-decoration:underline}
 
-    /* Sticky-Header */
-    #ergebnisTabelle thead th{
-      position: sticky; top: 0; z-index: 1;
-      background: linear-gradient(180deg, #eff6ff 0%, #eaf2ff 100%);
-      color:#1e3a8a;
-      box-shadow: inset 0 -1px 0 #e5e7eb;
-    }
+  .copyrow{display:flex; align-items:flex-end; gap:6px}
+  .copyrow input[readonly]{flex:1; height: var(--ctl-h); min-width:0;}
+  .copybtn{
+    display:flex; align-items:center; justify-content:center;
+    height: var(--ctl-h); width: var(--ctl-h);
+    padding:0; border:1px solid #3a4354; background:#1b2330; color:#dbe6ff;
+    border-radius:6px; cursor:pointer; line-height:1; min-width:0; flex:0 0 var(--ctl-h);
+    transition: background-color .15s ease, transform .12s ease, filter .15s ease, box-shadow .15s ease;
+  }
+  .copybtn.copied{ outline:2px solid var(--brand); }
+  .copybtn svg{ width:16px; height:16px; stroke: var(--brand); fill:none; stroke-width:2; }
 
-    /* Zebra + Hover */
-    #ergebnisTabelle tbody tr:nth-child(even):not(.feiertag-row){ background:#f9fafb; }
-    #ergebnisTabelle tbody tr:hover{ background:#eef2ff; }
+  /* Raster-Beschriftung – nur Textfarbe, kein Hintergrund erzwungen */
+  .grid-label{
+    color: var(--grid-label);
+    font: 11px/1.2 Arial, sans-serif;
+    white-space: nowrap;
+  }
 
-    /* linke Akzentlinie */
-    #ergebnisTabelle tbody tr.wknd td:first-child{ box-shadow: inset 4px 0 0 #e5e7eb; }
-    #ergebnisTabelle tbody tr.feiertag-row td:first-child{ box-shadow: inset 4px 0 0 #f59e0b; }
+  #gridOptions{ transition: opacity .15s ease }
+  #gridOptions.hidden{ opacity:.0; height:0; overflow:hidden; pointer-events:none }
 
-    @media (min-width: 768px){
-      #ergebnisTabelle th, #ergebnisTabelle td{ padding-top: .6rem; padding-bottom: .6rem; }
-    }
+  /* Live-HUD unten links */
+  .coord-hud{
+    position:absolute; left:8px; bottom:8px; z-index:1000;
+    background:rgba(15,22,34,.85); color:#e6efff; border:1px solid #2b3446; border-radius:8px;
+    padding:8px 10px; font:12px/1.35 Arial,sans-serif; white-space:nowrap; pointer-events:none;
+  }
+  .coord-hud .row{display:flex; align-items:center; gap:6px;}
+  .coord-hud b{ color:#9ec1ff; min-width:60px; text-align:left; }
 
-    /* kleine Status-Badges */
-    .chip{ display:inline-block; margin-left:.5rem; padding:2px 8px; font-size:.65rem; line-height:1; border-radius:9999px; vertical-align:middle; border:1px solid transparent; }
-    .chip-cancel{ background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
-    .chip-info{   background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+  /* Zoom-Badge */
+  .leaflet-control-zoominfo{
+    background:rgba(15,22,34,.85); color:#e6efff; border:1px solid #2b3446;
+    padding:4px 8px; border-radius:6px; font:12px/1 Arial,sans-serif; margin-top:4px;
+  }
 
-    /* Toolbar + Sortierung + No-Results */
-    .table-toolbar{
-      display:flex; gap:.75rem; align-items:center; justify-content:space-between;
-      padding:.6rem .9rem; border-bottom:1px solid #e5e7eb; background:#f8fafc;
-    }
-    .table-toolbar.hidden{ display:none; }
-    .table-toolbar .left, .table-toolbar .right{
-      display:flex; align-items:center; gap:.5rem;
-    }
-    .table-toolbar .left{ flex:1 1 auto; flex-wrap:nowrap; }
-    .table-search{
-      appearance:none; border:1px solid #d1d5db; background:#fff; color:#111827;
-      border-radius:.5rem; padding:.5rem .75rem; font-size:.9rem;
-      flex: 1 1 18rem; min-width:12rem; max-width:30rem;
-    }
-    .table-search:focus{ outline:2px solid #93c5fd; outline-offset:1px; border-color:#60a5fa; }
-    .table-count{ font-size:.8rem; color:#6b7280; white-space:nowrap; }
+  /* Zoom-Limit Overlay */
+  .zoom-notice{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    z-index:1500; background:rgba(15,22,34,.95); color:#e6efff;
+    border:1px solid #2b3446; border-radius:8px; padding:6px 10px; font:12px/1 Arial,sans-serif;
+    display:none; pointer-events:none;
+  }
 
-    #ergebnisTabelle thead th.sortable{ cursor:pointer; user-select:none; position:sticky; top:0; z-index:2; padding-right:1.25rem; }
-    #ergebnisTabelle thead th .sort-ind{
-      position:absolute; right:.5rem; top:50%; transform:translateY(-50%) rotate(0deg);
-      font-size:.85rem; color:#64748b; opacity:.7; transition:transform .15s ease, opacity .15s ease;
-    }
-    #ergebnisTabelle thead th.sorted-asc  .sort-ind{ transform:translateY(-50%) rotate(180deg); opacity:1; }
-    #ergebnisTabelle thead th.sorted-desc .sort-ind{ transform:translateY(-50%) rotate(0deg);   opacity:1; }
-    #ergebnisTabelle thead th.sorted-asc, #ergebnisTabelle thead th.sorted-desc{ color:#0f2167; }
+  /* Checkbox-Reihe im Raster-Abschnitt */
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .checkbox-row > div{
+    display:flex; align-items:center; gap:6px;
+  }
 
-    .row-hidden{ display:none; }
-    .no-results{
-      padding:1rem 1.25rem; color:#6b7280; font-size:.9rem; text-align:center;
-      border-top:1px dashed #e5e7eb; background:#fafafa;
-    }
-  </style>
+  /* ============================
+     SPEZIFISCHE FIXES: UTM & MGRS
+     ============================ */
+
+  #sec-utm .grid-4{ grid-template-columns: 56px 64px 1fr 1fr; align-items: start; }
+  #utmZone { width:56px !important; min-width:56px; max-width:56px; text-align:center; }
+  #utmHem  { width:64px !important; min-width:64px; max-width:64px; text-align:center; }
+
+  #sec-utm .row-2{
+    display:grid;
+    grid-template-columns: 60px 1fr;
+    gap:10px;
+    align-items:end;
+  }
+  #utmBand{ width:60px !important; min-width:60px; max-width:60px; text-align:center; }
+  #utmString{ flex:1 1 auto; width:100% !important; min-width:0; }
+  #copyUtm{ flex:0 0 var(--ctl-h); width:var(--ctl-h); height:var(--ctl-h); padding:0; }
+
+  #sec-mgrs .grid-4{ grid-template-columns: 80px 64px 1fr 1fr; align-items:start; }
+  #mgrsZoneBand { width:80px !important; min-width:80px; max-width:80px; text-align:center; }
+  #mgrs100k     { width:64px !important; min-width:64px; max-width:64px; text-align:center; }
+
+  #utmOstwert, #utmNordwert, #mgrsE, #mgrsN{ width:100% !important; min-width:0; font-variant-numeric: tabular-nums; }
+
+  #sec-utm .grid-4 label,
+  #sec-mgrs .grid-4 label{ font-size:11px; line-height:1.2; }
+  #sec-utm .grid-4 > div,
+  #sec-mgrs .grid-4 > div{ min-width:0; }
+  .copyrow input[readonly]{ width:100% !important; }
+
+  @media (max-width: 520px){
+    :root{ --panel-w: 100vw; }
+    body{ flex-direction:column; }
+    .map-wrap{ height:55vh; }
+  }
+  @media (max-width: 420px){
+    #sec-utm .grid-4, #sec-mgrs .grid-4{ grid-template-columns: repeat(2, 1fr); }
+    #sec-utm .row-2{ grid-template-columns: 1fr; align-items:stretch; }
+  }
+</style>
 </head>
-<body class="bg-gradient-to-tr from-blue-50 to-blue-100 min-h-screen p-6">
+<body>
 
-  <div class="max-w-5xl mx-auto">
-    <!-- Header -->
-    <header class="app-header" role="banner" aria-label="DienstOrbit">
-      <div class="app-header-inner">
-        <div class="app-logo">
-          <img id="brandLogo" alt="DienstOrbit Logo" class="logo-img hidden" />
-          <div id="brandFallback" class="logo-fallback" aria-hidden="true">DO</div>
-        </div>
-        <div class="app-titlewrap">
-          <h1 id="pageTop" class="app-title sr-only">DienstOrbit – Dienstplan-Generator</h1>
-          <p class="app-subtitle">Dienstpläne im Orbit: smart planen, sauber exportieren</p>
-          <p class="app-subline">Dienstplan-Generator mit Berücksichtigung von Ferien &amp; Feiertagen und diversen Export-Modulen.</p>
-        </div>
+  <div class="panel">
+    <header class="brand">
+      <!-- Logo klein, links oben, Header sticky -->
+      <svg viewBox="0 0 96 96" role="img" aria-labelledby="logoTitle" xmlns="http://www.w3.org/2000/svg">
+        <title id="logoTitle">KoordinatenWerk by Wolle</title>
+        <circle cx="48" cy="48" r="36" fill="none" stroke="var(--brand)" stroke-width="2"/>
+        <g stroke="var(--brand)" stroke-opacity="0.35" stroke-width="1">
+          <circle cx="48" cy="48" r="26" fill="none"/>
+          <circle cx="48" cy="48" r="16" fill="none"/>
+          <line x1="12" y1="48" x2="84" y2="48"/>
+          <line x1="48" y1="12" x2="48" y2="84"/>
+        </g>
+        <g stroke="var(--brand)" stroke-width="2" stroke-linecap="round">
+          <line x1="48" y1="8"  x2="48" y2="14"/>
+          <line x1="48" y1="82" x2="48" y2="88"/>
+          <line x1="8"  y1="48" x2="14" y2="48"/>
+          <line x1="82" y1="48" x2="88" y2="48"/>
+          <line x1="19.5" y1="19.5" x2="24" y2="24"/>
+          <line x1="72.5" y1="72.5" x2="68" y2="68"/>
+          <line x1="72.5" y1="23.5" x2="68" y2="28"/>
+          <line x1="19.5" y1="72.5" x2="24" y2="68"/>
+        </g>
+        <g transform="rotate(-20 48 48)">
+          <polygon points="48,16 55,41 48,46 41,41" fill="var(--brand)"/>
+          <polygon points="48,80 41,46 48,41 55,46" fill="none" stroke="var(--brand)" stroke-width="1.8"/>
+        </g>
+        <circle cx="48" cy="48" r="2.2" fill="var(--brand)"/>
+      </svg>
+      <div>
+        <h1 id="brand-title">KoordinatenWerk</h1>
+        <small>Suchen • Finden • Messen</small><br>
+        <small >THW OV Bad Bergzabern</small>
       </div>
+      <!-- Taktische Zeit-Box wird per Script ergänzt -->
     </header>
 
-    <!-- Allgemeine Angaben -->
-    <div class="space-y-4 border border-gray-200 rounded-xl bg-gray-50 p-4 shadow-sm">
-      <h3 class="text-xl font-extrabold text-blue-700 uppercase mb-2">Allgemeine Angaben</h3>
+    <!-- Adresse / Geocoding -->
+    <div class="card">
+      <h2>Adresse / Ort</h2>
+      <form id="addrForm">
+        <input id="addrQuery" type="text" placeholder="z. B. THW Bad Bergzabern"/>
+        <div class="btnrow-3" style="margin-top:8px">
+            <button id="addrSearch" type="submit">Suchen</button>
+            <button id="addrReset" type="button" title="Auf Startposition zurücksetzen">Reset</button>
+            <button id="addrCenter" type="button" title="Aktuellen Marker zentrieren">Zentrieren</button>
+        </div>
+        <select id="addrResults" style="display:none;margin-top:8px"></select>
+      </form>
+    </div>
 
-      <label class="block font-medium">Name des Ortsverband:
-        <input type="text" id="ov_name" class="w-full border border-blue-200 rounded-lg px-3 py-2 mt-1" aria-describedby="error_ov_name">
-        <p id="error_ov_name" class="error-msg">Bitte geben Sie den Namen des Ortsverbands ein.</p>
-      </label>
-
-      <div class="flex flex-col md:flex-row md:items-center md:gap-6">
-        <label class="block w-full font-medium">Bundesland zur Ferien- und Feiertagsermittlung:
-          <select id="bundesland" class="w-full border border-blue-200 rounded-lg px-3 py-2 mt-1" aria-describedby="error_bundesland">
-            <option value="">Bitte wählen</option>
-            <option value="BW">Baden-Württemberg</option><option value="BY">Bayern</option>
-            <option value="BE">Berlin</option><option value="BB">Brandenburg</option>
-            <option value="HB">Bremen</option><option value="HH">Hamburg</option>
-            <option value="HE">Hessen</option><option value="MV">Mecklenburg-Vorpommern</option>
-            <option value="NI">Niedersachsen</option><option value="NW">Nordrhein-Westfalen</option>
-            <option value="RP">Rheinland-Pfalz</option><option value="SL">Saarland</option>
-            <option value="SN">Sachsen</option><option value="ST">Sachsen-Anhalt</option>
-            <option value="SH">Schleswig-Holstein</option><option value="TH">Thüringen</option>
+    <!-- Kartenstil & Raster -->
+    <hr class="divider">
+    <div class="card" id="sec-basemap">
+      <h2>Kartenstil & Raster</h2>
+      <div class="grid-2">
+        <div>
+          <label for="baseLayer">Basiskarte</label>
+          <select id="baseLayer">
+            <option value="osm" selected>Standard (OSM)</option>
+            <option value="esri">Satellit (Esri)</option>
           </select>
-          <p id="error_bundesland" class="error-msg">Bitte wählen Sie ein Bundesland aus. Wird für die Feiertags- &amp; Ferien-Ermittlung benötigt.</p>
-        </label>
-
-        <div class="flex flex-wrap gap-6 items-center mt-4 md:mt-7">
-          <label class="inline-flex items-center">
-            <input type="checkbox" id="feiertagsCheck" class="form-checkbox h-5 w-5 text-blue-600"/>
-            <span class="ml-2 text-sm text-gray-700">Dienst an Feiertagen</span>
-          </label>
-          <label class="inline-flex items-center">
-            <input type="checkbox" id="ferienCheck" class="form-checkbox h-5 w-5 text-blue-600" checked/>
-            <span class="ml-2 text-sm text-gray-700">Dienst in Ferien</span>
-          </label>
-          <!-- NEU: Master-Schalter -->
-          <label class="inline-flex items-center" title="Wenn aktiv: Steuerung je Terminreihe; globale Checkboxen werden deaktiviert.">
-            <input type="checkbox" id="reihenRegelungCheck" class="form-checkbox h-5 w-5 text-blue-600"/>
-            <span class="ml-2 text-sm text-gray-700">Regelung in Terminreihen</span>
-          </label>
+        </div>
+        <div>
+          <label for="gridType">Raster</label>
+          <select id="gridType">
+            <option value="auto" selected>Auto (zoomabhängig)</option>
+            <option value="none">Kein Raster</option>
+            <option value="utm1">UTM 1 km (Zoom 13 - 19)</option>
+            <option value="utm10">UTM 10 km (Zoom 9 - 19)</option>
+            <option value="mgrs100">MGRS 100 km (Zoom 5- 19)</option>
+          </select>
         </div>
       </div>
 
-      <label class="block font-medium">Anzahl Terminreihen (max. 5):
-        <select id="anzahl_reihen" class="w-full border border-blue-200 rounded-lg px-3 py-2 mt-1">
-          <option value="1" selected>1</option><option value="2">2</option><option value="3">3</option>
-          <option value="4">4</option><option value="5">5</option>
-        </select>
-      </label>
-
-      <p id="global_date_hint" class="hint-msg"></p>
-      <p id="ferien_hint" class="hint-msg hidden"></p>
-    </div>
-
-    <!-- Terminreihen -->
-    <div id="terminreihen-container" class="space-y-8 mt-4"></div>
-
-    <!-- Aktionen -->
-    <div class="flex flex-wrap gap-4 justify-center pt-6 md:pt-5">
-      <button id="btnBerechnen" class="bg-blue-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-blue-700">Termine ermitteln</button>
-      <button id="btnReset" class="bg-red-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-red-700">Reset Termine</button>
-    </div>
-
-    <!-- Exporte -->
-    <div id="exportButtons" class="flex flex-wrap gap-4 justify-center pt-8 md:pt-5 pb-8 md:pb-5">
-      <button id="btnCsv"  class="bg-green-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-green-700 disabled-btn"  disabled>Export als CSV</button>
-      <button id="btnPdf"  class="bg-yellow-500 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-yellow-600 disabled-btn" disabled>Export als PDF</button>
-      <button id="btnIcs"  class="bg-purple-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-purple-700 disabled-btn" disabled>Export als ICS</button>
-      <button id="btnXlsx" class="bg-indigo-600 text-white font-bold px-7 py-3 rounded-xl shadow hover:bg-indigo-700 disabled-btn" disabled>Export als Excel</button>
-    </div>
-
-    <!-- Ergebnis -->
-    <div id="ergebnisDivider" class="hidden my-4"><div class="border-t border-gray-300"></div></div>
-    <h2 id="ergebnisTitel" class="hidden text-lg font-extrabold text-blue-700" tabindex="-1">Ergebnistabelle</h2>
-
-    <div class="mt-2 table-card">
-      <!-- Toolbar jetzt initial versteckt -->
-      <div class="table-toolbar hidden" id="tableToolbar">
-        <div class="left">
-          <input id="tableSearch" class="table-search" type="search" placeholder="Suchen… (Datum, Tag, Dienst, Hinweis)" aria-label="Tabelle durchsuchen">
-          <button id="tableSearchClear" type="button" class="px-2 py-1 border rounded text-sm hover:bg-gray-50" title="Suche leeren">Reset Suche</button>
-          <span id="tableCount" class="table-count"></span>
+      <div id="gridOptions">
+        <!-- Zeile 1: Farben -->
+        <div class="grid-2" style="margin-top:8px">
+          <div>
+            <label for="gridColor">Rasterfarbe</label>
+            <input id="gridColor" type="color" value="#ff0000" />
+          </div>
+          <div>
+            <label for="gridLabelColor">Beschriftungsfarbe</label>
+            <input id="gridLabelColor" type="color" value="#0000a0" />
+          </div>
         </div>
-        <div class="right"></div>
+
+        <!-- Zeile 2: Raster-Checkboxen -->
+        <div class="checkbox-row">
+          <div>
+            <input id="gridLabelsChk" type="checkbox" checked />
+            <label for="gridLabelsChk">Linien beschriften</label>
+          </div>
+          <div>
+            <input id="gridAutoContrast" type="checkbox" />
+            <label for="gridAutoContrast">Kontrast automatisch</label>
+          </div>
+        </div>
       </div>
-      <table class="min-w-full table-auto hidden" id="ergebnisTabelle">
-        <thead>
-          <tr class="bg-blue-100">
-            <th class="border px-4 py-2 text-left">Datum</th>
-            <th class="border px-4 py-2 text-left">Tag</th>
-            <th class="border px-4 py-2 text-left">Dienst</th>
-            <th class="border px-4 py-2 text-left">Uhrzeit</th>
-            <th class="border px-4 py-2 text-left">Hinweis</th>
-          </tr>
-        </thead>
-        <tbody id="tabelleBody"></tbody>
-      </table>
-    </div>  
-      
-    <!-- Hinweise -->
-    <div class="legend-box" role="note">
-      <button id="toggleHinweise" class="w-full flex items-center justify-between gap-4" aria-expanded="false" aria-controls="hinweisePanel" type="button">
-        <span class="text-sm font-semibold text-blue-700">Hinweise &amp; Legende anzeigen</span>
-        <svg class="chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
-      <div id="hinweisePanel" class="mt-2 collapsible">
-        <div class="mt-1">
-          <span class="auto-badge">⚡ auto</span> = Vorschlagswerte:
-          <em>Zeit:</em> Mo–Fr <strong>19:00–22:30</strong>, Sa–So <strong>07:30–17:00</strong>.
-          <em>Datum:</em> <strong>01.01.</strong> und <strong>31.12.</strong> des aktuellen Jahres.
-        </div><br>
-        <strong>Hinweise:</strong>
-        <ul class="list-disc pl-5 mt-1 space-y-1">
-          <li>Die Zeit-Defaults werden bei Auswahl des Wochentags ermittelt.</li>
-          <li>Die Datum-Defaults (<strong>01.01.</strong> und <strong>31.12.</strong> des aktuellen Jahres) werden immer vorbelegt.</li>
-          <li>Bei manueller Eingabe verschwindet das <span class="auto-badge">⚡ auto</span>-Badge.</li>
-          <li><strong>Reset Termine</strong> setzt Eingaben auf Default und leert die Tabelle.</li>
-          <li>Die Export-Buttons sind erst nach <strong>Termine ermitteln</strong> aktiv.</li>
-          <li><em>Ferien-Logik:</em> Ist <strong>Dienst in Ferien</strong> deaktiviert, werden Termine mit <strong>Entfällt</strong> markiert; im Feld <strong>Hinweis</strong> steht der Ferienname; Beim ICS-Export ist der Termin dann zwar enthalten, aber <strong>abgesagt</strong>.</li>
-          <li><em>Feiertag-Logik:</em> Ist <strong>Dienst an Feiertagen</strong> deaktiviert, werden Termine mit <strong>Entfällt</strong> markiert; Beim ICS-Export ist der Termin dann zwar enthalten, aber <strong>abgesagt</strong>.</li>
-          <li><em>Gültiger Datumsbereich:</em> Aktuelles Jahr − 2 bis aktuelles Jahr + 4.</li>
-          <li>Zur Ausführung der Anwendung ist eine Internetverbindung erforderlich.</li>
-          <li><em>Datenquelle für Ferien und Feiertage: </em> <a href="https://www.openholidaysapi.org" target="_blank" rel="noopener">OpenHolidaysAPI.</a></li>
-        </ul>
+
+      <!-- HUD-Checkbox: bleibt IMMER sichtbar -->
+      <div class="checkbox-row" id="hudRow">
+        <div>
+          <input id="hudToggle" type="checkbox" checked />
+          <label for="hudToggle">Live-HUD anzeigen</label>
+        </div>
       </div>
     </div>
 
-    <footer>
-      © 2025 · Wolfgang Saal, Böllenborn · August 2025<br>
-      MIT-Lizenz. Download: <a href="https://github.com/wsaal68/dienstorbit" target="_blank" rel="noopener">github.com/wsaal68/dienstorbit</a>.
-    </footer>
+    <!-- UTM -->
+    <hr class="divider">
+    <div class="card" id="sec-utm">
+      <h2>UTM Koordinaten</h2>
+      <div class="grid-4">
+        <div><label for="utmZone">Zone</label>
+          <input id="utmZone" class="wch" style="--ch:2" type="text" inputmode="numeric" maxlength="2" pattern="([1-9]|[1-5][0-9]|60)"/>
+        </div>
+        <div><label for="utmHem">Halbkugel</label>
+          <select id="utmHem" class="wch" style="--ch:2"><option value="N">N</option><option value="S">S</option></select>
+        </div>
+        <div><label for="utmOstwert">Ostwert (m)</label>
+          <input id="utmOstwert" class="wch" style="--ch:12" type="text" inputmode="numeric" maxlength="10" pattern="\d{5,6}"/>
+        </div>
+        <div><label for="utmNordwert">Nordwert (m)</label>
+          <input id="utmNordwert" class="wch" style="--ch:14" type="text" inputmode="numeric" maxlength="12" pattern="\d{1,8}"/>
+        </div>
+      </div>
 
-  </div><!-- /max-w wrapper -->
+      <div class="row-2" style="margin-top:8px">
+        <div>
+          <label for="utmBand">Band</label>
+          <input id="utmBand" class="wch" style="--ch:2" type="text" readonly />
+        </div>
+        <div>
+          <label for="utmString">UTM (lesbar)</label>
+          <div class="copyrow">
+            <input id="utmString" class="wch" style="--ch:50" type="text" readonly />
+            <button id="copyUtm" type="button" class="copybtn" title="UTM kopieren" aria-label="UTM kopieren">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="3" width="11" height="14" rx="2"></rect>
+                <path d="M5 7v12a2 2 0 0 0 2 2h9"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
-  <!-- Floating Buttons -->
-  <button id="btnToResults" type="button" class="float-btn to-results rounded-full bg-white text-blue-700 border border-blue-200 shadow-lg px-4 py-2" title="Zur Ergebnistabelle">Zur Tabelle</button>
-  <button id="btnToExport"  type="button" class="float-btn to-export  rounded-full bg-white text-blue-700 border border-blue-200 shadow-lg px-4 py-2" title="Zu den Export-Buttons">Zum Export</button>
-  <button id="btnToTop"     type="button" class="float-btn to-top     rounded-full bg-blue-600 text-white shadow-lg px-4 py-3" title="Nach oben">
-    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4l6 6M10 4L4 10M10 4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </button>
+      <div id="utmWarn" class="warn" style="display:none"></div>
+    </div>
 
+    <!-- MGRS -->
+    <hr class="divider">
+    <div class="card" id="sec-mgrs">
+      <h2>MGRS Koordinaten</h2>
+      <div class="grid-4">
+        <div><label for="mgrsZoneBand">Zone+Band</label>
+          <input id="mgrsZoneBand" class="wch" style="--ch:3" type="text" maxlength="3" placeholder="32U"/>
+        </div>
+        <div><label for="mgrs100k">100km</label>
+          <input id="mgrs100k" class="wch" style="--ch:2" type="text" maxlength="2" placeholder="NV"/>
+        </div>
+        <div><label for="mgrsE">Ostwert</label>
+          <input id="mgrsE" class="wch" style="--ch:5" type="text" maxlength="5" placeholder="70169"/>
+        </div>
+        <div><label for="mgrsN">Nordwert</label>
+          <input id="mgrsN" class="wch" style="--ch:5" type="text" maxlength="5" placeholder="50301"/>
+        </div>
+      </div>
+      <div class="copyrow" style="margin-top:8px">
+        <div style="flex:1">
+          <label for="mgrsString">MGRS (lesbar)</label>
+          <input id="mgrsString" class="wch" style="--ch:34" type="text" readonly />
+        </div>
+        <button id="copyMgrs" type="button" class="copybtn" title="MGRS kopieren" aria-label="MGRS kopieren">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="3" width="11" height="14" rx="2"></rect>
+            <path d="M5 7v12a2 2 0 0 0 2 2h9"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="mgrsWarn" class="warn" style="display:none"></div>
+    </div>
+
+    <!-- Dezimalgrad -->
+    <hr class="divider">
+    <div class="card" id="sec-dec">
+      <h2>Dezimale Grad</h2>
+      <div class="grid-2">
+        <div>
+          <label for="lat">Breite (Lat)</label>
+          <input id="lat" type="text" inputmode="decimal" maxlength="12" pattern="-?\d{1,2}(\.\d{1,6})?" />
+        </div>
+        <div>
+          <label for="lng">Länge (Lng)</label>
+          <input id="lng" type="text" inputmode="decimal" maxlength="13" pattern="-?\d{1,3}(\.\d{1,6})?" />
+        </div>
+      </div>
+    </div>
+
+    <!-- DMS -->
+    <hr class="divider">
+    <div class="card" id="sec-dms">
+      <h2>DMS (Grad ° / Minuten ′ / Sekunden ″)</h2>
+      <small class="hint">Negative Grad setzen die Hemisphäre automatisch.</small>
+
+      <h3>Breite (Lat)</h3>
+      <div class="grid-4">
+        <div><label for="latDeg">Grad</label>
+          <input id="latDeg" class="wch" style="--ch:3" type="text" inputmode="numeric" maxlength="3" pattern="-?\d{1,2}"/>
+        </div>
+        <div><label for="latMin">Minuten</label>
+          <input id="latMin" class="wch" style="--ch:2" type="text" inputmode="numeric" maxlength="2" pattern="\d{1,2}"/>
+        </div>
+        <div><label for="latSec">Sekunden</label>
+          <input id="latSec" class="wch" style="--ch:6" type="text" inputmode="decimal" maxlength="6" pattern="\d{1,2}(\.\d{1,2})?"/>
+        </div>
+        <div><label for="latHem">Hemisphäre</label>
+          <select id="latHem" class="wch" style="--ch:3"><option value="N">N</option><option value="S">S</option></select>
+        </div>
+      </div>
+
+      <h3 style="margin-top:10px">Länge (Lng)</h3>
+      <div class="grid-4">
+        <div><label for="lngDeg">Grad</label>
+          <input id="lngDeg" class="wch" style="--ch:4" type="text" inputmode="numeric" maxlength="4" pattern="-?\d{1,3}"/>
+        </div>
+        <div><label for="lngMin">Minuten</label>
+          <input id="lngMin" class="wch" style="--ch:2" type="text" inputmode="numeric" maxlength="2" pattern="\d{1,2}"/>
+        </div>
+        <div><label for="lngSec">Sekunden</label>
+          <input id="lngSec" class="wch" style="--ch:6" type="text" inputmode="decimal" maxlength="6" pattern="\d{1,2}(\.\d{1,2})?"/>
+        </div>
+        <div><label for="lngHem">Hemisphäre</label>
+          <select id="lngHem" class="wch" style="--ch:3"><option value="E">E</option><option value="W">W</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messen -->
+    <div class="card" id="sec-measure">
+      <h2>Messen in der Karte</h2>
+      <div class="btnrow">
+        <button id="measureDist">Strecke</button>
+        <button id="measureArea">Fläche</button>
+        <button id="measureUndo" type="button">Entfernen</button>
+        <button id="measureClear" type="button">Löschen</button>
+      </div>
+      <div id="measureInfo" class="hint"></div>
+
+      <div class="legal-wrap">
+        <hr class="divider">
+        <div class="legal">
+          <span>© 2025 Wolfgang Saal, Böllenborn </span>
+            <span>•</span> 
+            <a id="licLink" href="https://github.com/wsaal68/KoordinatenWerk/blob/main/LICENSE" target="_blank" rel="noopener">KIT-Lizenz</a>
+            <span>•</span>
+            <a id="ghLink" href="https://github.com/wsaal68" target="_blank" rel="noopener">Download</a>
+          <span>Script für Technisches Hilfswerk Ortsverband Bad Bergzabern</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-wrap">
+    <div id="map"></div>
+    <!-- Zoom-Limit Overlay -->
+    <div id="zoomNotice" class="zoom-notice" role="status" aria-live="polite"></div>
+    <!-- Live HUD -->
+    <div id="coordHud" class="coord-hud" aria-live="polite">
+      <div class="row"><b>Lat/Lng:</b><span id="hudDD">—</span></div>
+      <div class="row"><b>UTM:</b><span id="hudUTM">—</span></div>
+      <div class="row"><b>MGRS:</b><span id="hudMGRS">—</span></div>
+    </div>
+  </div>
+
+  <!-- MGRS Loader -->
   <script>
-/* ========= Basics ========= */
-const $ = sel => document.querySelector(sel);
-const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/* ========= Brand-Logo ========= */
-const BRAND_CANDIDATES = [
-  'logo_dienstorbit.png','DienstOrbit Schriftzug schmal.png','DienstOrbit Schriftzug.png',
-  'DienstOrbit Logo.png','logo.png','dienstorbit.png'
-];
-window.brandLogoDataUrl = null; let brandNatural = {w:0, h:0};
-function tryLoadImage(src){ return new Promise(resolve=>{ const img=new Image(); img.onload=()=>resolve(img); img.onerror=()=>resolve(null); img.src=src+(src.includes('?')?'&':'?')+'cb='+Date.now(); }); }
-function blobToDataURL(blob){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(blob); }); }
-async function srcToDataURL(src){
-  try{ const res=await fetch(src,{cache:'no-store'}); if(res.ok){ const b=await res.blob(); const d=await blobToDataURL(b); if(typeof d==='string'&&d.startsWith('data:')) return d; } }catch(_){}
-  return new Promise(resolve=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>{ try{ const c=document.createElement('canvas'); c.width=i.naturalWidth||i.width; c.height=i.naturalHeight||i.height; c.getContext('2d').drawImage(i,0,0); resolve(c.toDataURL('image/png')); }catch(e){ resolve(null);} }; i.onerror=()=>resolve(null); i.src=src+(src.includes('?')?'&':'?')+'cb='+Date.now(); });
-}
-async function setupBrand(){
-  const imgEl=$('#brandLogo'), fallbackEl=$('#brandFallback');
-  for(const cand of BRAND_CANDIDATES){
-    const ok=await tryLoadImage(cand); if(!ok) continue;
-    fallbackEl?.classList.add('hidden'); fallbackEl?.style.setProperty('display','none','important');
-    imgEl.src=ok.src; imgEl.classList.remove('hidden');
-    brandNatural={ w: ok.naturalWidth||ok.width, h: ok.naturalHeight||ok.height };
-    window.brandLogoDataUrl=await srcToDataURL(ok.src);
-    break;
-  }
-  if(!imgEl.src){ fallbackEl?.classList.remove('hidden'); }
-}
-
-/* ========= UI-Helfer ========= */
-function getYearBounds(){ const y=new Date().getFullYear(); return { minYear:y-2, maxYear:y+4, minDateStr:`${y-2}-01-01`, maxDateStr:`${y+4}-12-31` }; }
-function applyDateBounds(scope){ const {minDateStr,maxDateStr}=getYearBounds(); (scope||document).querySelectorAll('.dienst_start, .dienst_ende').forEach(inp=>{ inp.setAttribute('min',minDateStr); inp.setAttribute('max',maxDateStr); }); }
-function updateGlobalHints(){
-  const {minYear,maxYear}=getYearBounds();
-  const base=`Gültiger Datumsbereich für Start-/Enddatum: 01.01.${minYear} bis 31.12.${maxYear}.`;
-  const reihenMode = $('#reihenRegelungCheck')?.checked;
-  if (reihenMode) {
-    $('#global_date_hint').textContent = base + ' Die Ferien-/Feiertags-Regelung erfolgt je Terminreihe.';
-    return;
-  }
-  const ferienOff=!$('#ferienCheck').checked;
-  const extra = ferienOff
-    ? ' „Dienst in Ferien“ ist deaktiviert (Termine in Ferien werden als „Entfällt“ markiert).'
-    : ' „Dienst in Ferien“ ist aktiviert (Termine in Ferien bleiben bestehen).';
-  $('#global_date_hint').textContent = base + extra;
-}
-
-/* ========= Terminreihen ========= */
-function createTerminreihe(index){
-  const y=new Date().getFullYear(); const {minDateStr,maxDateStr}=getYearBounds();
-  return `
-  <div class="border p-4 rounded-xl bg-blue-50 space-y-3 terminreihe">
-    <h3 class="text-xl font-extrabold text-blue-700 uppercase">Terminreihe ${index}</h3>
-    <label class="block font-medium">Bezeichnung:
-      <input type="text" class="dienst_bezeichnung w-full border rounded px-3 py-2">
-      <span class="error-msg">Bitte eine Bezeichnung eingeben.</span>
-    </label>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <label class="block font-medium">Wochentag:
-        <select class="dienst_wochentag w-full border rounded px-3 py-2">
-          <option value="">Bitte wählen</option>
-          <option>Montag</option><option>Dienstag</option><option>Mittwoch</option>
-          <option>Donnerstag</option><option>Freitag</option><option>Samstag</option><option>Sonntag</option>
-        </select>
-        <span class="error-msg">Bitte einen Wochentag wählen.</span>
-      </label>
-      <label class="block font-medium">Turnus:
-        <select class="dienst_turnus w-full border rounded px-3 py-2">
-          <option value="woechentlich">Wöchentlich</option>
-          <option value="2woechentlich">Zweiwöchentlich</option>
-          <option value="monatlich">Monatlich</option>
-        </select>
-        <span class="error-msg">Bitte einen Turnus wählen.</span>
-      </label>
-      <label class="block font-medium monatlich-option hidden">Position im Monat:
-        <select class="dienst_monat_position w-full border rounded px-3 py-2" disabled>
-          <option value="1">Erster</option><option value="2">Zweiter</option>
-          <option value="3">Dritter</option><option value="4">Vierter</option>
-          <option value="-1">Letzter</option>
-        </select>
-        <span class="error-msg">Bitte die Position im Monat wählen.</span>
-      </label>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <label class="block font-medium">Startdatum:
-        <input type="date" class="dienst_start w-full border rounded px-3 py-2" value="${y}-01-01" min="${minDateStr}" max="${maxDateStr}">
-        <span class="error-msg">Bitte ein Startdatum wählen.</span>
-      </label>
-      <label class="block font-medium">Enddatum:
-        <input type="date" class="dienst_ende w-full border rounded px-3 py-2" value="${y}-12-31" min="${minDateStr}" max="${maxDateStr}">
-        <span class="error-msg">Bitte ein Enddatum wählen.</span>
-      </label>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <label class="block font-medium">Startzeit:
-        <input type="time" class="dienst_startzeit w-full border rounded px-3 py-2">
-        <span class="error-msg">Bitte eine Startzeit angeben.</span>
-      </label>
-      <label class="block font-medium">Endzeit:
-        <input type="time" class="dienst_endzeit w-full border rounded px-3 py-2">
-        <span class="error-msg">Bitte eine Endzeit angeben.</span>
-      </label>
-    </div>
-
-    <!-- NEU: reihenbezogene Checkboxen (werden per applyRegelungUI ein-/ausgeblendet) -->
-    <div class="reihen-options hidden mt-2">
-      <div class="flex gap-6 items-center">
-        <label class="inline-flex items-center">
-          <input type="checkbox" class="reihe_feiertag_check form-checkbox h-5 w-5 text-blue-600"/>
-          <span class="ml-2 text-sm text-gray-700">Dienst an Feiertagen</span>
-        </label>
-        <label class="inline-flex items-center">
-          <input type="checkbox" class="reihe_ferien_check form-checkbox h-5 w-5 text-blue-600"/>
-          <span class="ml-2 text-sm text-gray-700">Dienst in Ferien</span>
-        </label>
-      </div>
-      <p class="hint-msg mt-1">
-        Wirksam nur, wenn „Regelung in Terminreihen“ aktiv ist.
-      </p>
-    </div>
-  </div>`;
-}
-function safeParseInt(v,def){ const n=parseInt(v,10); return Number.isFinite(n)?n:def; }
-function updateTerminreihen(opts={}){
-  const container=$('#terminreihen-container'); const fresh=!!opts.fresh;
-  const snapshot = fresh? [] : Array.from(container.querySelectorAll('.terminreihe')).map(reihe=>{
-    const q=s=>reihe.querySelector(s), v=s=>q(s)?.value || '';
-    return {
-      bezeichnung:v('.dienst_bezeichnung'), wochentag:v('.dienst_wochentag'), turnus:v('.dienst_turnus')||'woechentlich',
-      monatPos:v('.dienst_monat_position'), start:v('.dienst_start'), ende:v('.dienst_ende'),
-      startzeit:v('.dienst_startzeit'), endzeit:v('.dienst_endzeit'),
-      startzeitManual:q('.dienst_startzeit')?.dataset.manual==='1', endzeitManual:q('.dienst_endzeit')?.dataset.manual==='1',
-      startDateManual:q('.dienst_start')?.dataset.manual==='1', endDateManual:q('.dienst_ende')?.dataset.manual==='1'
-    };
-  });
-  container.innerHTML=''; const count=Math.min(Math.max(safeParseInt($('#anzahl_reihen')?.value,1),1),5);
-  for(let i=1;i<=count;i++) container.insertAdjacentHTML('beforeend', createTerminreihe(i));
-
-  const neu=Array.from(container.querySelectorAll('.terminreihe'));
-  neu.forEach((r,i)=>{
-    const d=snapshot[i]; if(!d) return;
-    const set=(sel,val)=>{ const el=r.querySelector(sel); if(el && val!=='') el.value=val; };
-    set('.dienst_bezeichnung', d.bezeichnung); set('.dienst_wochentag', d.wochentag); set('.dienst_turnus', d.turnus);
-    const monatDiv=r.querySelector('.monatlich-option'); const selMon=monatDiv?.querySelector('select');
-    if(d.turnus==='monatlich'){ monatDiv?.classList.remove('hidden'); selMon?.removeAttribute('disabled'); }
-    set('.dienst_monat_position', d.monatPos);
-    const sDate=r.querySelector('.dienst_start'), eDate=r.querySelector('.dienst_ende');
-    if(sDate){ if(d.start) sDate.value=d.start; if(d.startDateManual) sDate.dataset.manual='1'; }
-    if(eDate){ if(d.ende) eDate.value=d.ende; if(d.endDateManual) eDate.dataset.manual='1'; }
-    const st=r.querySelector('.dienst_startzeit'), en=r.querySelector('.dienst_endzeit');
-    if(st){ if(d.startzeit) st.value=d.startzeit; if(d.startzeitManual) st.dataset.manual='1'; }
-    if(en){ if(d.endzeit) en.value=d.endzeit; if(d.endzeitManual) en.dataset.manual='1'; }
-  });
-
-  applyDateBounds(container); updateGlobalHints();
-
-  container.querySelectorAll('.dienst_turnus').forEach(select=>{
-    select.addEventListener('change', e=>{
-      const wrap=e.target.closest('.terminreihe'); const monatDiv=wrap.querySelector('.monatlich-option'); const selMon=monatDiv.querySelector('select');
-      if(e.target.value==='monatlich'){ monatDiv.classList.remove('hidden'); selMon.removeAttribute('disabled'); }
-      else { monatDiv.classList.add('hidden'); selMon.setAttribute('disabled','disabled'); }
-    });
-  });
-
-  // UI der Reihenoptionen entsprechend dem Master-Schalter ausrichten
-  applyRegelungUI();
-}
-
-/* ========= Auto-Badges ========= */
-function setAutoBadgeFor(input,on){
-  if(!input) return; const label=input.closest('label'); if(!label) return;
-  let badge=label.querySelector('.auto-badge');
-  if(on){ if(!badge){ badge=document.createElement('span'); badge.className='auto-badge'; badge.textContent='⚡ auto'; label.appendChild(badge);} input.classList.add('bg-yellow-100'); }
-  else { if(badge) badge.remove(); input.classList.remove('bg-yellow-100'); }
-}
-function applyAutoBadgesForDates(scope){
-  (scope||document).querySelectorAll('.terminreihe').forEach(r=>{
-    const s=r.querySelector('.dienst_start'), e=r.querySelector('.dienst_ende');
-    [s,e].forEach(inp=>{
-      if(!inp || inp.dataset.manual==='1') return;
-      const v=inp.value||'', isDefault = v.slice(5)==='01-01' || v.slice(5)==='12-31';
-      if(isDefault){ inp.dataset.auto='1'; setAutoBadgeFor(inp,true); } else { delete inp.dataset.auto; setAutoBadgeFor(inp,false); }
-    });
-  });
-}
-function applyAutoBadgesForTimes(scope){
-  (scope||document).querySelectorAll('.terminreihe').forEach(reihe=>{
-    const w=reihe.querySelector('.dienst_wochentag')?.value||'';
-    const st=reihe.querySelector('.dienst_startzeit'); const en=reihe.querySelector('.dienst_endzeit');
-    if(!st||!en||st.dataset.manual==='1'||en.dataset.manual==='1') return;
-    const werktage=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-    if(!w){ st.value=''; en.value=''; setAutoBadgeFor(st,false); setAutoBadgeFor(en,false); return; }
-    if(w==='Samstag'||w==='Sonntag'){ st.value='07:30'; en.value='17:00'; }
-    else if(werktage.includes(w)){ st.value='19:00'; en.value='22:30'; }
-    setAutoBadgeFor(st,true); setAutoBadgeFor(en,true);
-  });
-}
-
-/* ========= Validierung ========= */
-function getOrCreateErrorEl(input){
-  const label=input.closest('label')||input.parentElement||input;
-  let p=label.querySelector('.error-msg'); if(!p){ p=document.createElement('p'); p.className='error-msg'; label.appendChild(p); }
-  return p;
-}
-function setFieldError(input,msg){
-  input?.classList.add('error-field'); input?.setAttribute('aria-invalid','true');
-  const p=getOrCreateErrorEl(input); p.textContent=msg||'Pflichtfeld'; p.style.display='block';
-}
-function clearFieldError(input){
-  input?.classList.remove('error-field'); input?.removeAttribute('aria-invalid');
-  const p=input?.closest('label')?.querySelector('.error-msg'); if(p){ p.style.display='none'; p.textContent=''; }
-}
-function validateTerminreihe(reihe){
-  let valid=true;
-  const bezeichnung=reihe.querySelector('.dienst_bezeichnung');
-  const wochentag=reihe.querySelector('.dienst_wochentag');
-  const turnus=reihe.querySelector('.dienst_turnus');
-  const monatPos=reihe.querySelector('.dienst_monat_position');
-  const monatWrap=reihe.querySelector('.monatlich-option');
-  const start=reihe.querySelector('.dienst_start');
-  const ende =reihe.querySelector('.dienst_ende');
-  const st=reihe.querySelector('.dienst_startzeit');
-  const en=reihe.querySelector('.dienst_endzeit');
-  const {minYear,maxYear}=getYearBounds();
-
-  if(!bezeichnung.value.trim()){ setFieldError(bezeichnung,'Bitte eine Bezeichnung eingeben.'); valid=false; } else clearFieldError(bezeichnung);
-  if(!wochentag.value){ setFieldError(wochentag,'Bitte einen Wochentag wählen.'); valid=false; } else clearFieldError(wochentag);
-  if(!turnus.value){ setFieldError(turnus,'Bitte einen Turnus wählen.'); valid=false; } else clearFieldError(turnus);
-
-  if(turnus.value==='monatlich'){
-    monatWrap?.classList.remove('hidden'); monatPos?.removeAttribute('disabled');
-    if(!monatPos.value){ setFieldError(monatPos,'Bitte die Position im Monat wählen.'); valid=false; } else clearFieldError(monatPos);
-  } else { monatWrap?.classList.add('hidden'); monatPos?.setAttribute('disabled','disabled'); clearFieldError(monatPos); }
-
-  if(!start.value){ setFieldError(start,'Bitte ein Startdatum wählen.'); valid=false; }
-  else { const y=new Date(start.value).getFullYear(); if(y<minYear||y>maxYear){ setFieldError(start,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(start); }
-
-  if(!ende.value){ setFieldError(ende,'Bitte ein Enddatum wählen.'); valid=false; }
-  else { const y2=new Date(ende.value).getFullYear(); if(y2<minYear||y2>maxYear){ setFieldError(ende,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(ende); }
-
-  if(start.value && ende.value){
-    const sd=new Date(start.value), ed=new Date(ende.value);
-    if(sd>ed){ setFieldError(ende,'Enddatum liegt vor Startdatum.'); valid=false; } else clearFieldError(ende);
-  }
-
-  if(!st.value){ setFieldError(st,'Bitte eine Startzeit angeben.'); valid=false; } else clearFieldError(st);
-  if(!en.value){ setFieldError(en,'Bitte eine Endzeit angeben.'); valid=false; } else clearFieldError(en);
-  if(st.value && en.value && st.value >= en.value){ setFieldError(en,'Endzeit muss nach Startzeit liegen.'); valid=false; } else clearFieldError(en);
-
-  return valid;
-}
-function validateGeneralFields(){
-  let valid=true;
-  const ov=$('#ov_name'); const bl=$('#bundesland');
-  if(!ov.value.trim()){ setFieldError(ov,'Bitte geben Sie den Namen des Ortsverbands ein.'); valid=false; } else clearFieldError(ov);
-  if(!bl.value){ setFieldError(bl,'Bitte Bundesland wählen.'); valid=false; } else clearFieldError(bl);
-  return valid;
-}
-
-function updateFerienHint(){
-  const ferienHint=$('#ferien_hint'), ferienCheck=$('#ferienCheck'); if(!ferienHint) return;
-  const reihenMode = $('#reihenRegelungCheck')?.checked;
-  ferienHint.classList.toggle('hidden', reihenMode || (ferienCheck?.checked ?? true));
-}
-
-/* ========= Regelung in Terminreihen: UI-Schaltung ========= */
-function applyRegelungUI(isOn = $('#reihenRegelungCheck')?.checked){
-  const feiertagGlobal = $('#feiertagsCheck');
-  const ferienGlobal   = $('#ferienCheck');
-  const reihenBoxes    = document.querySelectorAll('.terminreihe .reihen-options');
-
-  const feiertagLabelSpan = feiertagGlobal?.closest('label')?.querySelector('span');
-  const ferienLabelSpan   = ferienGlobal?.closest('label')?.querySelector('span');
-
-  if (isOn) {
-    if (feiertagGlobal) { 
-      feiertagGlobal.checked = false; 
-      feiertagGlobal.disabled = true; 
-      feiertagLabelSpan?.classList.remove('text-gray-700');
-      feiertagLabelSpan?.classList.add('text-gray-400');
-    }
-    if (ferienGlobal) { 
-      ferienGlobal.checked   = false; 
-      ferienGlobal.disabled   = true; 
-      ferienLabelSpan?.classList.remove('text-gray-700');
-      ferienLabelSpan?.classList.add('text-gray-400');
-    }
-    reihenBoxes.forEach(box => box.classList.remove('hidden'));
-  } else {
-    if (feiertagGlobal) { 
-      feiertagGlobal.disabled = false; 
-      feiertagLabelSpan?.classList.remove('text-gray-400');
-      feiertagLabelSpan?.classList.add('text-gray-700');
-    }
-    if (ferienGlobal) { 
-      ferienGlobal.disabled   = false; 
-      ferienLabelSpan?.classList.remove('text-gray-400');
-      ferienLabelSpan?.classList.add('text-gray-700');
-    }
-    // Reihen-Checkboxen unsichtbar und auf "nicht gesetzt" zurück
-    document.querySelectorAll('.terminreihe').forEach(reihe=>{
-      const box = reihe.querySelector('.reihen-options'); box?.classList.add('hidden');
-      const cFei = reihe.querySelector('.reihe_feiertag_check'); if(cFei) cFei.checked=false;
-      const cFer = reihe.querySelector('.reihe_ferien_check');  if(cFer) cFer.checked=false;
-    });
-  }
-  updateGlobalHints();
-  updateFerienHint();
-}
-
-
-/* ========= Init ========= */
-document.addEventListener('DOMContentLoaded', async ()=>{
-  await setupBrand();
-
-  // gespeicherte Werte
-  try{
-    const sOV=localStorage.getItem('ov_name'); if(sOV!==null) $('#ov_name').value=sOV;
-    const sBL=localStorage.getItem('bundesland'); if(sBL!==null) $('#bundesland').value=sBL;
-    const sFT=localStorage.getItem('feiertagsCheck'); if(sFT!==null) $('#feiertagsCheck').checked=(sFT==='1');
-    const sFerien=localStorage.getItem('ferienCheck'); if(sFerien!==null) $('#ferienCheck').checked=(sFerien==='1');
-    const sReihen=localStorage.getItem('reihenRegelungCheck'); if(sReihen!==null) $('#reihenRegelungCheck').checked=(sReihen==='1');
-  }catch{}
-
-  updateTerminreihen(); applyDateBounds(); updateGlobalHints(); applyAutoBadgesForDates(); applyAutoBadgesForTimes();
-  setupCollapsible(); updateFerienHint();
-
-  // Toolbar initial sicher ausblenden
-  updateToolbarVisibility();
-
-  // Fehler sofort entfernen (Allgemeine Angaben)
-  $('#ov_name').addEventListener('input', e=>{ localStorage.setItem('ov_name', e.target.value); if(e.target.value.trim()) clearFieldError(e.target); });
-  $('#bundesland').addEventListener('change', e=>{ localStorage.setItem('bundesland', e.target.value); if(e.target.value) clearFieldError(e.target); });
-  $('#feiertagsCheck').addEventListener('change', e=>{ localStorage.setItem('feiertagsCheck', e.target.checked?'1':'0'); updateGlobalHints(); });
-  $('#ferienCheck').addEventListener('change', e=>{ localStorage.setItem('ferienCheck', e.target.checked?'1':'0'); updateGlobalHints(); updateFerienHint(); });
-
-  // NEU: Master-Schalter
-  $('#reihenRegelungCheck').addEventListener('change', e=>{
-    localStorage.setItem('reihenRegelungCheck', e.target.checked ? '1' : '0');
-    applyRegelungUI(e.target.checked);
-  });
-
-  $('#anzahl_reihen').addEventListener('change', ()=>{ updateTerminreihen(); applyDateBounds(); applyAutoBadgesForDates(); applyAutoBadgesForTimes(); });
-
-  // Inputs beobachten (Terminreihen)
-  $('#terminreihen-container').addEventListener('input', e=>{
-    const reihe=e.target.closest('.terminreihe'); if(!reihe) return;
-    if(e.target.matches('.dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')){ e.target.dataset.manual='1'; setAutoBadgeFor(e.target,false); }
-    if(e.target.matches('.dienst_bezeichnung, .dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')) validateTerminreihe(reihe);
-  });
-  $('#terminreihen-container').addEventListener('change', e=>{
-    const r=e.target.closest('.terminreihe'); if(!r) return;
-    if(e.target.classList.contains('dienst_wochentag')){
-      const val=e.target.value, werktage=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-      const st=r.querySelector('.dienst_startzeit'), en=r.querySelector('.dienst_endzeit');
-      const ms=st?.dataset.manual==='1', me=en?.dataset.manual==='1';
-      if(val===''){ if(st&&!ms){st.value='';setAutoBadgeFor(st,false);} if(en&&!me){en.value='';setAutoBadgeFor(en,false);} }
-      else if(val==='Samstag'||val==='Sonntag'){ if(st&&!ms){st.value='07:30';setAutoBadgeFor(st,true);} if(en&&!me){en.value='17:00';setAutoBadgeFor(en,true);} }
-      else if(werktage.includes(val)){ if(st&&!ms){st.value='19:00';setAutoBadgeFor(st,true);} if(en&&!me){en.value='22:30';setAutoBadgeFor(en,true);} }
-    }
-    if(e.target.matches('.dienst_turnus, .dienst_monat_position, .dienst_wochentag, .dienst_start, .dienst_ende')) validateTerminreihe(r);
-  });
-
-  // Floating Buttons
-  updateToTopVisibility(); updateResultsButtonVisibility(); updateExportButtonVisibility();
-
-  // Nach dem initialen Aufbau sicherstellen, dass Master-Schalter seine Wirkung zeigt
-  applyRegelungUI($('#reihenRegelungCheck')?.checked);
-});
-
-/* ========= Collapsible ========= */
-function setupCollapsible(){
-  const btn=$('#toggleHinweise'), panel=$('#hinweisePanel'), chev=btn?.querySelector('.chevron'); if(!btn||!panel) return;
-  function setOpen(open){
-    btn.setAttribute('aria-expanded', String(open)); chev?.setAttribute('aria-expanded', String(open));
-    btn.querySelector('span').textContent = open ? 'Hinweise & Legende verbergen' : 'Hinweise & Legende anzeigen';
-    if (prefersReduced){ panel.classList.toggle('open', open); panel.style.maxHeight=open?'none':'0px'; panel.style.opacity=open?'1':'0'; }
-    else {
-      if(open){ panel.classList.add('open'); panel.style.maxHeight='0px'; panel.style.opacity='0'; requestAnimationFrame(()=>{ const h=panel.scrollHeight; panel.style.maxHeight=h+'px'; panel.style.opacity='1'; }); }
-      else { const h=panel.scrollHeight; panel.style.maxHeight=h+'px'; panel.style.opacity='1'; requestAnimationFrame(()=>{ panel.style.maxHeight='0px'; panel.style.opacity='0'; panel.addEventListener('transitionend', function handler(){ panel.classList.remove('open'); panel.removeEventListener('transitionend', handler); }); }); }
-    }
-    localStorage.setItem('hinweiseOpen', open?'1':'0');
-  }
-  setOpen(localStorage.getItem('hinweiseOpen') === '1');
-  btn.addEventListener('click', ()=> setOpen(!(btn.getAttribute('aria-expanded')==='true')));
-}
-
-/* ========= Ergebnis-Berechnung ========= */
-function ymd(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${da}`; }
-function ymdToLocalDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,(m||1)-1,d||1); }
-
-function validateInputs(){
-  let valid=true;
-  if(!validateGeneralFields()) valid=false;
-  document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe=>{ if(!validateTerminreihe(reihe)) valid=false; });
-  return valid;
-}
-function toggleExportButtons(enable){ ['btnCsv','btnPdf','btnIcs','btnXlsx'].forEach(id=>{ const b=$('#'+id); b.disabled=!enable; b.classList.toggle('disabled-btn', !enable); }); }
-toggleExportButtons(false);
-
-/* === Toolbar (Sichtbarkeit + Suchen / Leeren / Zähler) === */
-function updateToolbarVisibility(){
-  const bar = $('#tableToolbar') || $('.table-toolbar');
-  const visible = hasResultsVisible();
-  if(bar){
-    bar.classList.toggle('hidden', !visible);
-  }
-}
-function ensureTableToolbar(){
-  const card=document.querySelector('.table-card'); if(!card) return;
-  let bar=card.querySelector('.table-toolbar');
-  if(!bar){
-    bar=document.createElement('div');
-    bar.className='table-toolbar hidden';
-    bar.id='tableToolbar';
-    bar.innerHTML=`
-      <div class="left">
-        <input id="tableSearch" class="table-search" type="search" placeholder="Suchen… (Datum, Tag, Dienst, Hinweis)" aria-label="Tabelle durchsuchen">
-        <button id="tableSearchClear" type="button" class="px-2 py-1 border rounded text-sm hover:bg-gray-50" title="Suche leeren">Leeren</button>
-        <span id="tableCount" class="table-count"></span>
-      </div>
-      <div class="right"></div>
-    `;
-    card.insertBefore(bar, card.firstChild);
-  } else {
-    if(!bar.querySelector('#tableSearch')) {
-      const left=bar.querySelector('.left') || bar.appendChild(document.createElement('div'));
-      left.className='left';
-      left.insertAdjacentHTML('afterbegin', `<input id="tableSearch" class="table-search" type="search" placeholder="Suchen… (Datum, Tag, Dienst, Hinweis)" aria-label="Tabelle durchsuchen">`);
-    }
-    if(!bar.querySelector('#tableSearchClear')){
-      const btn=document.createElement('button');
-      btn.id='tableSearchClear'; btn.type='button';
-      btn.className='px-2 py-1 border rounded text-sm hover:bg-gray-50';
-      btn.title='Suche leeren'; btn.textContent='Leeren';
-      bar.querySelector('.left')?.appendChild(btn);
-    }
-    if(!bar.querySelector('#tableCount')){
-      const span=document.createElement('span'); span.id='tableCount'; span.className='table-count';
-      bar.querySelector('.left')?.appendChild(span);
-    }
-  }
-}
-
-/* === Suche & Sortierung === */
-let tableSortState = { col: null, dir: 'asc' };
-
-function parseDateCell(s){
-  const m=String(s).trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if(!m) return 0;
-  const d=new Date(Number(m[3]), Number(m[2])-1, Number(m[1])); return d.getTime()||0;
-}
-const wdayIndex={ 'Sonntag':0,'Montag':1,'Dienstag':2,'Mittwoch':3,'Donnerstag':4,'Freitag':5,'Samstag':6 };
-
-function cellKey(tr,col){
-  const td=tr.cells[col]; if(!td) return '';
-  const txt=td.innerText.trim();
-  if(col===0) return parseDateCell(txt);
-  if(col===1) return wdayIndex[txt] ?? 9;
-  if(col===3){ const m=txt.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/); if(!m) return 0; return Number(m[1])*6000+Number(m[2])*100+Number(m[3])*10+Number(m[4]); }
-  return txt.replace(/^Entfällt:\s*/i,'').toLowerCase();
-}
-function sortTableBy(col){
-  const table=$('#ergebnisTabelle'); const tbody=$('#tabelleBody'); if(!table||!tbody) return;
-  const rows=Array.from(tbody.rows);
-  if(tableSortState.col===col){ tableSortState.dir=(tableSortState.dir==='asc')?'desc':'asc'; }
-  else { tableSortState.col=col; tableSortState.dir='asc'; }
-  rows.sort((a,b)=>{ const ka=cellKey(a,col), kb=cellKey(b,col); if(ka<kb) return tableSortState.dir==='asc'?-1:1; if(ka>kb) return tableSortState.dir==='asc'?1:-1; return 0; });
-  rows.forEach(r=>tbody.appendChild(r));
-  table.querySelectorAll('thead th').forEach((th,i)=>{ th.classList.remove('sorted-asc','sorted-desc'); if(i===col) th.classList.add(tableSortState.dir==='asc'?'sorted-asc':'sorted-desc'); });
-}
-function attachTableSorting(){
-  const thead=$('#ergebnisTabelle thead'); if(!thead) return;
-  thead.querySelectorAll('th').forEach((th,idx)=>{
-    if(!th.classList.contains('sortable')){
-      th.classList.add('sortable'); const ind=document.createElement('span'); ind.className='sort-ind'; ind.setAttribute('aria-hidden','true'); ind.textContent='▾';
-      th.style.position='relative'; th.appendChild(ind); th.tabIndex=0; th.title='Klicken zum Sortieren';
-      th.addEventListener('click', ()=>sortTableBy(idx));
-      th.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); sortTableBy(idx);} });
-    }
-  });
-}
-function applySearchFilter(q){
-  const tbody=$('#tabelleBody'); if(!tbody) return;
-  const query=String(q||'').toLowerCase().trim(); let visible=0, total=0;
-  Array.from(tbody.rows).forEach(tr=>{ total++; const text=tr.innerText.toLowerCase(); const match=!query||text.includes(query); tr.classList.toggle('row-hidden', !match); if(match) visible++; });
-  const countEl=$('#tableCount'); if(countEl) countEl.textContent = visible===total ? `${total} Einträge` : `${visible} / ${total} Einträge`;
-  let nr=$('#noResultsRow'); const card=$('.table-card')||$('#ergebnisTabelle')?.parentElement;
-  if(!nr && card){ nr=document.createElement('div'); nr.id='noResultsRow'; nr.className='no-results'; nr.style.display='none'; nr.textContent='Keine Treffer.'; card.appendChild(nr); }
-  if(nr) nr.style.display=(visible===0)?'':'none';
-}
-function attachSearch(){
-  ensureTableToolbar();
-  const input=$('#tableSearch'); const clearBtn=$('#tableSearchClear');
-  if(input){ input.value=''; input.addEventListener('input', ()=>applySearchFilter(input.value)); }
-  if(clearBtn && input){ clearBtn.addEventListener('click', ()=>{ input.value=''; applySearchFilter(''); input.focus(); }); }
-}
-function attachTableFeatures(){
-  attachSearch();
-  attachTableSorting();
-  // Standardsortierung: Datum ASC
-  tableSortState = { col: null, dir: 'asc' };
-  sortTableBy(0); // ASC
-  applySearchFilter('');
-}
-
-/* === Reset Termine === */
-function clearAllFieldErrors(){
-  document.querySelectorAll('.error-field').forEach(el=>{
-    el.classList.remove('error-field'); el.removeAttribute('aria-invalid');
-  });
-  document.querySelectorAll('.error-msg').forEach(p=>{
-    p.style.display='none'; p.textContent='';
-  });
-}
-
-function resetTermine(){
-  // Terminreihen neu aufsetzen (Defaults) – Anzahl beibehalten
-  updateTerminreihen({ fresh: true });
-  applyDateBounds();
-  applyAutoBadgesForDates();
-  applyAutoBadgesForTimes();
-  updateGlobalHints();
-
-  // Ergebnisse leeren & ausblenden
-  const tbody = document.getElementById('tabelleBody');
-  if (tbody) tbody.innerHTML = '';
-  document.getElementById('ergebnisTabelle')?.classList.add('hidden');
-  document.getElementById('ergebnisTitel')?.classList.add('hidden');
-  document.getElementById('ergebnisDivider')?.classList.add('hidden');
-
-  // Suchfeld leeren, Zähler zurücksetzen, Toolbar ausblenden
-  const search = document.getElementById('tableSearch');
-  if (search) search.value = '';
-  try { applySearchFilter(''); } catch(_) {}
-  updateToolbarVisibility?.();
-
-  // Exporte deaktivieren, Floating-Buttons aktualisieren
-  toggleExportButtons(false);
-  updateResultsButtonVisibility?.();
-  updateExportButtonVisibility?.();
-
-  // Fehlermarkierungen entfernen
-  clearAllFieldErrors();
-
-  // Reihen-UI nach Reset wieder richtig setzen
-  applyRegelungUI($('#reihenRegelungCheck')?.checked);
-}
-
-// Click-Handler registrieren
-document.getElementById('btnReset').addEventListener('click', resetTermine);
-
-/* ========= Export-Helfer ========= */
-function getCleanHeaderTexts(table){
-  const ths = table?.querySelectorAll('thead th') || [];
-  return [...ths].map(th=>{
-    const clone = th.cloneNode(true);
-    clone.querySelectorAll('.sort-ind').forEach(el=>el.remove());
-    return (clone.textContent||'').replace(/[▾▴▼▲]/g,'').trim();
-  });
-}
-function readRowExportValues(tr){
-  const tds = tr.querySelectorAll('td');
-  const dateDisplay = tds[0]?.innerText.trim() || '';
-  const weekday     = tds[1]?.innerText.trim() || '';
-  const dienstRaw   = tr.dataset.dienstRaw || (tds[2]?.innerText.trim() || '');
-  const timeStart   = tr.dataset.timeStart || (tds[3]?.innerText.split(' - ')[0]?.trim() || '');
-  const timeEnd     = tr.dataset.timeEnd   || (tds[3]?.innerText.split(' - ')[1]?.trim() || '');
-  const hint        = tr.dataset.hint || '';
-  return { dateDisplay, weekday, dienstRaw, timeStart, timeEnd, hint };
-}
-function displayTimeRange(s,e){ return (s&&e) ? `${s} - ${e}` : ''; }
-
-/* ========= Export: CSV ========= */
-function csvLine(arr,sep){ return arr.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(sep); }
-function sanitizeFileName(name){ return (name||'OV').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'')||'OV'; }
-function getPlanYearsFromTable(){
-  const cells=document.querySelectorAll('#tabelleBody tr td:first-child'); const years=new Set();
-  cells.forEach(td=>{ const p=(td.innerText||'').split('.'); const y=p[2]; if(y) years.add(y); });
-  if(!years.size) return ''; const arr=[...years].map(n=>parseInt(n,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
-  return arr.length===1? String(arr[0]) : `${arr[0]}-${arr[arr.length-1]}`;
-}
-function buildBaseFileName(){ const ov=sanitizeFileName($('#ov_name')?.value||'OV'); const years=getPlanYearsFromTable()||String(new Date().getFullYear()); return `dienstplan_${ov}_${years}`; }
-
-function exportCsv(){
-  const table=$('#ergebnisTabelle'), tbody=$('#tabelleBody'); if(!tbody||!tbody.rows.length) return;
-  const ovName=$('#ov_name').value || 'Unbekannter Ortsverband';
-  const SEP=';', EOL='\r\n';
-  const lines=['sep='+SEP, csvLine(['Ortsverband:', ovName], SEP)];
-  const header=getCleanHeaderTexts(table); if(header.length) lines.push(csvLine(header, SEP));
-
-  [...tbody.rows].forEach(tr=>{
-    const r=readRowExportValues(tr);
-    const row=[r.dateDisplay, r.weekday, r.dienstRaw, displayTimeRange(r.timeStart,r.timeEnd), r.hint];
-    lines.push(csvLine(row, SEP));
-  });
-
-  const blob=new Blob(['\ufeff'+lines.join(EOL)], {type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=buildBaseFileName()+'.csv'; a.click();
-}
-
-/* ========= Export: ICS ========= */
-function icsEscape(s){ if(!s) return ''; return String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,'); }
-function foldICSLines(lines){ const out=[]; for(const line of lines){ const max=75; if(line.length<=max){ out.push(line); continue; } let i=0; while(i<line.length){ const chunk=line.slice(i,i+max); out.push((i===0?'':' ')+chunk); i+=max; } } return out; }
-function exportIcs(){
-  const rows=document.querySelectorAll('#tabelleBody tr'); if(!rows.length) return;
-  const ovName=$('#ov_name').value || 'Unbekannter Ortsverband';
-  const vtimezone=['BEGIN:VTIMEZONE','TZID:Europe/Berlin','X-LIC-LOCATION:Europe/Berlin','BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT','BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD','END:VTIMEZONE'].join('\r\n');
-  const cal=['BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','PRODID:-//DienstOrbit//DE', vtimezone];
-
-  rows.forEach(tr=>{
-    const r=readRowExportValues(tr);
-    const [tag,monat,jahr]=(r.dateDisplay||'').split('.');
-    if(!jahr||!r.timeStart||!r.timeEnd) return;
-    const start=`${jahr}${monat}${tag}T${r.timeStart.replace(':','')}00`;
-    const end  =`${jahr}${monat}${tag}T${r.timeEnd.replace(':','')}00`;
-    const uid=`${jahr}${monat}${tag}-${Math.random().toString(36).slice(2)}@dienstorbit`;
-    const dtstamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-
-    const ve=['BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${dtstamp}`,`SUMMARY:${icsEscape(r.dienstRaw)}`,`LOCATION:${icsEscape(ovName)}`,`DTSTART;TZID=Europe/Berlin:${start}`,`DTEND;TZID=Europe/Berlin:${end}`];
-
-    if(/^Entfällt:\s*/i.test(r.dienstRaw)){
-      ve.push('STATUS:CANCELLED');
-      if(r.hint) ve.push(`DESCRIPTION:${icsEscape('Termin fällt aus wegen: '+r.hint)}`);
-    } else if(r.hint){
-      ve.push(`DESCRIPTION:${icsEscape('Hinweis: '+r.hint)}`);
-    }
-    ve.push('END:VEVENT'); cal.push(...foldICSLines(ve));
-  });
-
-  cal.push('END:VCALENDAR');
-  const blob=new Blob([cal.join('\r\n')], {type:'text/calendar;charset=utf-8;'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=buildBaseFileName()+'.ics'; a.click();
-}
-
-/* ========= Export: PDF ========= */
-function exportPdf(){
-  const ovName = $('#ov_name').value || 'Unbekannter Ortsverband';
-  const table  = $('#ergebnisTabelle');
-  const rows   = document.querySelectorAll('#tabelleBody tr');
-  if(!rows.length || !table) return;
-
-  const years = getPlanYearsFromTable() || new Date().getFullYear().toString();
-  const head  = getCleanHeaderTexts(table);
-
-  // Daten (ohne HTML) aus den data-* Werten aufbauen
-  const body = [...rows].map(tr=>{
-    const r = readRowExportValues(tr);
-    return [r.dateDisplay, r.weekday, r.dienstRaw, displayTimeRange(r.timeStart, r.timeEnd), r.hint];
-  });
-
-  // jsPDF + AutoTable laden (falls noch nicht vorhanden)
-  function loadJsPDF(){
-    return new Promise(async resolve=>{
-      if(window.jspdf?.jsPDF && window.jspdf.jsPDF.API?.autoTable) return resolve(true);
-      const js=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'];
-      const at=['https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js','https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
-      const tryLoad=src=>new Promise(res=>{
-        const s=document.createElement('script');
-        s.src=src; s.async=true; s.crossOrigin='anonymous';
-        const t=setTimeout(()=>res(false),7000);
-        s.onload=()=>{ clearTimeout(t); res(true); };
-        s.onerror=()=>{ clearTimeout(t); res(false); };
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src; s.async = true;
+        s.onload = () => resolve(true);
+        s.onerror = () => reject(new Error('Script-Load-Fehler: ' + src));
         document.head.appendChild(s);
       });
-      let ok=false;
-      for(const u of js){ ok=await tryLoad(u); if(ok) break; }
-      if(!ok) return resolve(false);
-      ok=false;
-      for(const u of at){ ok=await tryLoad(u); if(ok) break; }
-      resolve(ok);
-    });
-  }
+    }
+    async function ensureMgrs() {
+      if (window.mgrs) return true;
+      const candidates = [
+        'https://cdn.jsdelivr.net/npm/mgrs@1.0.0/mgrs.min.js',
+        'https://cdn.jsdelivr.net/npm/mgrs@1.0.0/dist/mgrs.min.js',
+        'https://cdn.jsdelivr.net/npm/mgrs@1.0.0/dist/mgrs.js'
+      ];
+      for (const url of candidates) {
+        try { await loadScript(url); if (window.mgrs) return true; } catch(_) {}
+      }
+      return false;
+    }
+    const mgrsReady = ensureMgrs();
+  </script>
 
-  (async ()=>{
-    const loaded=await loadJsPDF();
-    if(!loaded || !window.jspdf?.jsPDF){ alert('Konnte jsPDF nicht laden.'); return; }
+  <script>
+    /* ===== Leaflet & Utils ===== */
+    let map, marker;
+    let baseOSM, baseSat, layerControl;
+    let gridLayer = null;
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit:'pt', format:'a4' });
-    const pageWidth  = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+    const $ = id => document.getElementById(id);
+    const normLngWrap = lng => ((Number(lng) + 540) % 360) - 180;
 
-    // Tabellen-Styles: einzeilig bevorzugen; Hinweis wird ellipsized
-    const headStyles = {
-      fillColor:[239,246,255], textColor:[30,58,138], lineColor:[229,231,235],
-      lineWidth:0.8, halign:'left', fontSize:9
-    };
-    const bodyStyles = {
-      lineColor:[229,231,235], lineWidth:.4, textColor:[22,22,22],
-      fontSize:9, cellPadding:4, lineHeight:1.1, overflow:'ellipsize'
-    };
-    const columnStyles = {
-      0:{ cellWidth:90 },                             // Datum
-      1:{ cellWidth:70 },                             // Tag
-      2:{ cellWidth:'auto', overflow:'linebreak' },   // Dienst (darf ggf. umbrechen)
-      3:{ cellWidth:78 },                             // Uhrzeit
-      4:{ cellWidth:160, overflow:'ellipsize' }       // Hinweis (immer kürzen)
-    };
+    function lonToUtmZone(lon) { return Math.floor((lon + 180) / 6) + 1; }
+    function latToGzdBand(lat) {
+      if (lat < -80) return 'C';
+      if (lat > 84)  return 'X';
+      const bands = 'CDEFGHJKLMNPQRSTUVWX';
+      const idx = Math.floor((lat + 80) / 8);
+      return bands[idx] || '';
+    }
+    function utmProjString(zone, hemisphere) {
+      const south = hemisphere === 'S' ? ' +south' : '';
+      return `+proj=utm +zone=${zone}${south} +datum=WGS84 +units=m +no_defs +type=crs`;
+    }
 
-    // Header-Höhe (mit/ohne Logo)
-    const imgEl    = document.getElementById('brandLogo');
-    const logoHasEl= imgEl && !imgEl.classList.contains('hidden') && imgEl.naturalWidth > 0;
-    const logoSrc  = window.brandLogoDataUrl || (logoHasEl ? imgEl : null);
-    const haveLogo = !!logoSrc;
+    /* ===== Map & Layers ===== */
+    function initMap(lat, lng) {
+      // min/max Zoom
+      const MIN_Z = 5, MAX_Z = 19;
 
-    const headerBandH = haveLogo ? 60 : 40;
-    const startYTable = headerBandH + 10;
+      baseOSM = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { attribution: '&copy; OpenStreetMap-Mitwirkende', minZoom: MIN_Z, maxZoom: MAX_Z }
+      );
+      baseSat = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community', minZoom: MIN_Z, maxZoom: MAX_Z }
+      );
 
-    // Tabelle rendern (Zeilen nicht über Seiten trennen)
-    doc.autoTable({
-      head:[head],
-      body,
-      startY:startYTable,
-      margin:{ left:40, right:40, top:startYTable, bottom:58 },
-      styles:bodyStyles,
-      headStyles,
-      columnStyles,
-      alternateRowStyles:{ fillColor:[249,250,251] },
-      rowPageBreak:'avoid', // ← komplette Zeile springt bei Umbruch
+      map = L.map('map', { center: [lat, lng], zoom: 13, layers: [baseOSM], minZoom: MIN_Z, maxZoom: MAX_Z });
 
-      // optische Hervorhebung wie in der HTML-Tabelle
-      didParseCell:(data)=>{
-        if(data.section==='body'){
-          const dienst = data.row.raw?.[2] || '';
-          const hint   = data.row.raw?.[4] || '';
-          if(hint){ data.cell.styles.fillColor=[255,247,237]; data.cell.styles.textColor=[0,0,0]; }
-          if(/^Entfällt:\s*/i.test(dienst)){
-            data.cell.styles.textColor=[220,38,38];
-            if(!hint) data.cell.styles.fillColor=[254,242,242];
+      layerControl = L.control.layers(
+        { 'Standard (OSM)': baseOSM, 'Satellit (Esri)': baseSat },
+        null,
+        { position: 'topright', collapsed: true }
+      ).addTo(map);
+
+      // DROPDOWN zur Basiskarte korrekt setzen (Initialzustand = OSM)
+      const baseSel = $('baseLayer');
+      if (baseSel) baseSel.value = 'osm';
+
+      // Zoom-Info-Control
+      const ZoomInfo = L.Control.extend({
+        onAdd: function(){
+          const d=document.createElement('div');
+          d.className='leaflet-control-zoominfo';
+          d.id='zoomInfo';
+          d.textContent='Zoom: ' + map.getZoom();
+          return d;
+        }
+      });
+      (new ZoomInfo({position:'topleft'})).addTo(map);
+
+      map.on('zoomend', ()=> {
+        const z=$('zoomInfo'); if(z) z.textContent='Zoom: ' + map.getZoom();
+        enforceGridMinScale();
+        refreshGridOptionsVisibility();
+        updateGrid();
+        handleZoomNotice(map.getZoom(), MIN_Z, MAX_Z);
+      });
+
+      marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+      marker.on('moveend', () => {
+        const { lat, lng } = marker.getLatLng();
+        setLatLng(lat, lng, 'map');
+      });
+      map.on('click', onMapClick);
+
+      // Live HUD: Mausbewegung
+      map.on('mousemove', e => updateCoordHUD(e.latlng));
+      updateCoordHUD({lat, lng});
+
+      // Raster bei Bewegungen neu (Auto-Modus)
+      map.on('moveend', () => { if ($('gridType').value !== 'none') updateGrid(); });
+
+      // Auch beim Start Hinweis prüfen
+      handleZoomNotice(map.getZoom(), MIN_Z, MAX_Z);
+    }
+
+    function handleZoomNotice(z, minZ, maxZ){
+      const box = $('zoomNotice'); if (!box) return;
+      if (z === maxZ){ box.textContent = `Maximaler Zoom erreicht (${maxZ})`; box.style.display='block'; return; }
+      if (z === minZ){ box.textContent = `Minimaler Zoom erreicht (${minZ})`; box.style.display='block'; return; }
+      box.style.display='none';
+    }
+
+    /* Basiskarte umschalten + Raster sofort neu zeichnen */
+    function switchBaseLayer(val){
+      const wantSat = (val === 'esri');
+      const hasOSM = map.hasLayer(baseOSM);
+      const hasSat = map.hasLayer(baseSat);
+
+      if (wantSat){
+        if (hasOSM) map.removeLayer(baseOSM);
+        if (!hasSat) baseSat.addTo(map);
+      } else {
+        if (hasSat) map.removeLayer(baseSat);
+        if (!hasOSM) baseOSM.addTo(map);
+      }
+      redrawGridNow();
+    }
+
+    function redrawGridNow(){ try { updateGrid(); } catch(e){ console.warn('updateGrid error', e); } }
+
+    /* ===== DMS ===== */
+    function toDMS(value, isLat) {
+      const sign = value < 0 ? -1 : 1;
+      let abs = Math.abs(value);
+      let deg = Math.floor(abs);
+      abs = (abs - deg) * 60;
+      let min = Math.floor(abs);
+      let sec = (abs - min) * 60;
+      sec = Math.round(sec * 100) / 100;
+      if (sec >= 60) { sec -= 60; min += 1; }
+      if (min >= 60) { min -= 60; deg += 1; }
+      const hem = isLat ? (sign >= 0 ? 'N' : 'S') : (sign >= 0 ? 'E' : 'W');
+      return { deg, min, sec, hem };
+    }
+    function fromDMS(deg, min, sec, hem, isLat) {
+      deg = Number(deg); min = Number(min); sec = Number(sec);
+      if ([deg,min,sec].some(Number.isNaN)) return null;
+      if (deg < 0) hem = isLat ? 'S' : 'W';
+      deg = Math.abs(deg);
+      if (sec >= 60) { min += Math.floor(sec/60); sec = sec % 60; }
+      if (min >= 60) { deg += Math.floor(min/60); min = min % 60; }
+      if (isLat && deg > 90) deg = 90;
+      if (!isLat && deg > 180) deg = 180;
+      const dec = deg + (min/60) + (sec/3600);
+      const sign = (hem === (isLat ? 'S' : 'W')) ? -1 : 1;
+      return sign * dec;
+    }
+    function setDMSFields(lat, lng) {
+      const latD = toDMS(lat, true);
+      const lngD = toDMS(lng, false);
+      $('latDeg').value = latD.deg; $('latMin').value = latD.min; $('latSec').value = latD.sec.toFixed(2); $('latHem').value = latD.hem;
+      $('lngDeg').value = lngD.deg; $('lngMin').value = lngD.min; $('lngSec').value = lngD.sec.toFixed(2); $('lngHem').value = lngD.hem;
+    }
+
+    /* ===== UTM helpers (ohne Nachkommastellen) ===== */
+    function setUtmNordMaxLen(hem) {
+      const nEl = $('utmNordwert');
+      nEl.dataset.maxInt = (hem === 'S') ? '8' : '7';
+      nEl.value = sanitizeUTMInt(nEl.value, Number(nEl.dataset.maxInt||'8'));
+    }
+    function sanitizeUTMInt(val, maxDigits){
+      val = String(val||'').replace(/\D/g,'');
+      return (val||'').slice(0, Math.max(1,maxDigits));
+    }
+    function setUTMFieldsFromLatLng(lat, lng) {
+      const zone = lonToUtmZone(lng);
+      const hem  = lat >= 0 ? 'N' : 'S';
+      setUtmNordMaxLen(hem);
+      const utmDef = utmProjString(zone, hem);
+      try {
+        const [E, N] = proj4('EPSG:4326', utmDef, [lng, lat]);
+        const Ei = Math.round(E), Ni = Math.round(N);
+        $('utmZone').value = zone;
+        $('utmHem').value  = hem;
+        $('utmOstwert').value  = String(Ei);
+        $('utmNordwert').value = sanitizeUTMInt(String(Ni), Number($('utmNordwert').dataset.maxInt||'8'));
+        $('utmBand').value = latToGzdBand(lat);
+        // LESBAR: Zone Band E N
+        $('utmString').value = `${zone} ${$('utmBand').value || latToGzdBand(lat)} ${Ei} ${Ni}`;
+        $('utmWarn').style.display = 'none';
+      } catch (err) {
+        console.error('UTM aus Lat/Lng fehlgeschlagen:', err);
+        $('utmZone').value=$('utmHem').value=$('utmOstwert').value=$('utmNordwert').value=$('utmBand').value=$('utmString').value="";
+        $('utmWarn').textContent = 'UTM-Umrechnung fehlgeschlagen (proj4).';
+        $('utmWarn').style.display = 'block';
+      }
+    }
+    function updateFromUTMInputs() {
+      const zone = parseInt($('utmZone').value, 10);
+      const hem  = $('utmHem').value;
+      setUtmNordMaxLen(hem);
+      $('utmOstwert').value  = sanitizeUTMInt($('utmOstwert').value, 6);
+      $('utmNordwert').value = sanitizeUTMInt($('utmNordwert').value, Number($('utmNordwert').dataset.maxInt||'8'));
+
+      const E = parseInt($('utmOstwert').value, 10);
+      const N = parseInt($('utmNordwert').value, 10);
+
+      // LESBAR: Zone Band E N
+      $('utmString').value = (Number.isInteger(zone) && Number.isFinite(E) && Number.isFinite(N))
+        ? `${zone} ${$('utmBand').value || ''} ${E} ${N}`
+        : '';
+
+      const eOK = Number.isFinite(E) && E >= 100000 && E <= 900000;
+      const nOK = Number.isFinite(N) && N >= 0 && N <= 10000000;
+      const zOK = Number.isInteger(zone) && zone >= 1 && zone <= 60;
+      const hOK = (hem === 'N' || hem === 'S');
+      if (!(eOK && nOK && zOK && hOK)) return;
+
+      const utmDef = utmProjString(zone, hem);
+      try {
+        const [lon, lat] = proj4(utmDef, 'EPSG:4326', [E, N]);
+        setLatLng(lat, lon, 'utm');
+        $('utmWarn').style.display = 'none';
+      } catch (err) {
+        console.error('UTM-Eingabe ungültig:', err);
+        $('utmWarn').textContent = 'UTM-Eingaben ungültig.';
+        $('utmWarn').style.display = 'block';
+      }
+    }
+    function getUTMString(lat, lng){
+      try{
+        const zone = lonToUtmZone(lng);
+        const band = latToGzdBand(lat);
+        const [E, N] = proj4('EPSG:4326', utmProjString(zone, lat>=0?'N':'S'), [lng, lat]);
+        return `${zone} ${band} ${Math.round(E)} ${Math.round(N)}`;
+      }catch{return '—'}
+    }
+    function getMGRSString(lat, lng){
+      try{
+        if (typeof mgrs !== 'object') return '—';
+        return (mgrs.forward([lng, lat], 5) || '').toUpperCase().replace(/\s+/g,'').replace(/^(.{3})(.{2})(.{5})(.{5})$/, '$1 $2 $3 $4');
+      }catch{return '—'}
+    }
+
+    /* ===== Raster (Auto & Manuell) ===== */
+    function getAutoGridType(zoom){
+      if (zoom <= 9)  return (typeof mgrs === 'object') ? 'mgrs100' : 'utm10';
+      if (zoom <= 12) return 'utm10';
+      return 'utm1';
+    }
+
+    function computeAutoColors(){ return { line:'#ff0000', label:'rgb(0,0,160)' }; }
+
+    function maybeApplyAutoContrast(){
+      const auto = $('gridAutoContrast').checked;
+      if (!auto) return;
+      const { line, label } = computeAutoColors();
+      document.documentElement.style.setProperty('--grid', line);
+      document.documentElement.style.setProperty('--grid-label', label);
+      $('gridColor').value = '#ff0000';
+      $('gridLabelColor').value = '#0000a0';
+    }
+
+    function refreshGridOptionsVisibility(){
+      const isNone = $('gridType').value === 'none';
+      $('gridOptions').classList.toggle('hidden', isNone);
+      const auto = $('gridAutoContrast').checked;
+      $('gridColor').disabled = isNone || auto;
+      $('gridLabelColor').disabled = isNone || auto;
+      // HUD bleibt unberührt (separate Zeile)
+    }
+
+    function enforceGridMinScale(){
+      const z = map.getZoom();
+      const sel = $('gridType'); if (!sel) return;
+      const cur = sel.value;
+      if (cur === 'utm1' && z < 13){ sel.value = 'utm10'; }
+      else if (cur === 'utm10' && z < 9){ sel.value = 'mgrs100'; }
+      // KEIN automatisches "none" mehr
+    }
+
+    function updateGrid(){
+      if (!gridLayer) gridLayer = L.layerGroup().addTo(map);
+      gridLayer.clearLayers();
+
+      let type = $('gridType').value;
+      const z = map.getZoom();
+
+      if (type === 'auto'){
+        type = getAutoGridType(z);
+      }
+
+      if (type === 'none') return;
+      if (type === 'mgrs100' && typeof mgrs !== 'object') type = 'utm10';
+      if (typeof proj4 !== 'function') return;
+
+      try {
+        const center = map.getCenter();
+        const zone = lonToUtmZone(center.lng);
+        const hem  = center.lat >= 0 ? 'N' : 'S';
+        const utmDef = utmProjString(zone, hem);
+
+        const b  = map.getBounds();
+        const sw = proj4('EPSG:4326', utmDef, [b.getWest(), b.getSouth()]);
+        const ne = proj4('EPSG:4326', utmDef, [b.getEast(), b.getNorth()]);
+        let Emin = Math.min(sw[0], ne[0]), Emax = Math.max(sw[0], ne[0]);
+        let Nmin = Math.min(sw[1], ne[1]), Nmax = Math.max(sw[1], ne[1]);
+
+        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid').trim() || '#ff0000';
+
+        const addLabel = (latlng, text) => {
+          if (!$('gridLabelsChk').checked) return;
+          L.marker(latlng, {
+            interactive:false,
+            icon: L.divIcon({ className:'grid-label', html: text, iconAnchor:[0,0] })
+          }).addTo(gridLayer);
+        };
+
+        const drawUtm = (stepMeters) => {
+          const samples = 16;
+          const eStart = Math.ceil(Emin/stepMeters)*stepMeters;
+          const eEnd   = Math.floor(Emax/stepMeters)*stepMeters;
+          const nStart = Math.ceil(Nmin/stepMeters)*stepMeters;
+          const nEnd   = Math.floor(Nmax/stepMeters)*stepMeters;
+
+          for(let e=eStart; e<=eEnd; e+=stepMeters){
+            const pts=[];
+            for(let i=0;i<=samples;i++){
+              const n = Nmin + (i*(Nmax-Nmin)/samples);
+              const ll = proj4(utmDef, 'EPSG:4326', [e,n]);
+              pts.push([ll[1], ll[0]]);
+            }
+            L.polyline(pts, {color: gridColor, weight:1.6, opacity:0.95}).addTo(gridLayer);
+            const top = proj4(utmDef,'EPSG:4326',[e,Nmax]);
+            addLabel([top[1], top[0]], `E ${Math.round(e)}`);
           }
+
+          for(let n=nStart; n<=nEnd; n+=stepMeters){
+            const pts=[];
+            for(let i=0;i<=samples;i++){
+              const e = Emin + (i*(Emax-Emin)/samples);
+              const ll = proj4(utmDef, 'EPSG:4326', [e,n]);
+              pts.push([ll[1], ll[0]]);
+            }
+            L.polyline(pts, {color: gridColor, weight:1.6, opacity:0.95}).addTo(gridLayer);
+            const left = proj4(utmDef,'EPSG:4326',[Emin,n]);
+            addLabel([left[1], left[0]], `N ${Math.round(n)}`);
+          }
+        };
+
+        const drawMgrs100 = () => {
+          if (typeof mgrs !== 'object') return;
+          const step = 100000; // 100 km
+          const eStart = Math.ceil(Emin/step)*step;
+          const eEnd   = Math.floor(Emax/step)*step;
+          const nStart = Math.ceil(Nmin/step)*step;
+          const nEnd   = Math.floor(Nmax/step)*step;
+
+          for(let e=eStart; e<eEnd; e+=step){
+            for(let n=nStart; n<nEnd; n+=step){
+              const corners = [
+                proj4(utmDef,'EPSG:4326',[e, n]),
+                proj4(utmDef,'EPSG:4326',[e+step, n]),
+                proj4(utmDef,'EPSG:4326',[e+step, n+step]),
+                proj4(utmDef,'EPSG:4326',[e, n+step]),
+              ].map(ll=>[ll[1], ll[0]]);
+              L.polygon(corners, {color: gridColor, weight:1.6, opacity:0.98, fillOpacity:0}).addTo(gridLayer);
+
+              const mid = proj4(utmDef,'EPSG:4326',[e+step/2, n+step/2]);
+              const code = (mgrs.forward([mid[0], mid[1]], 0) || '').toUpperCase().replace(/\s+/g,'');
+              const lbl  = code ? `${code.slice(0,3)} ${code.slice(3,5)}` : '';
+              addLabel([mid[1], mid[0]], lbl);
+            }
+          }
+        };
+
+        if (type === 'utm1')   drawUtm(1000);
+        if (type === 'utm10')  drawUtm(10000);
+        if (type === 'mgrs100') drawMgrs100();
+
+      } catch(err){
+        console.error('Raster-Fehler:', err);
+      }
+    }
+
+    /* ===== Mess-Funktionen ===== */
+    let measureMode = 'none';
+    let distMarkers = [], distLine = null;
+    let areaMarkers = [], areaPoly = null;
+    const DIST_MAX_POINTS = 20;
+    let stagedClear = false;
+
+    function fmtDist(m){ if (!Number.isFinite(m)) return ''; const km = m/1000; return (m<1000) ? `${m.toFixed(0)} m` : `${km.toFixed(3)} km (${m.toFixed(0)} m)`; }
+    function fmtArea(m2){ if (!Number.isFinite(m2)) return ''; const ha = m2/10000, km2 = m2/1e6; return `${m2.toLocaleString('de-DE',{maximumFractionDigits:0})} m²  (${ha.toFixed(2)} ha, ${km2.toFixed(3)} km²)`; }
+
+    function removeMarkerFrom(arr, markerRef){
+      const i = arr.indexOf(markerRef);
+      if (i > -1) arr.splice(i, 1);
+      map.removeLayer(markerRef);
+      stagedClear = false;
+    }
+
+    function setMode(mode){
+      // Toggle: erneuter Klick auf aktiven Modus beendet Messung
+      if (measureMode === mode){
+        measureMode = 'none';
+        ['measureDist','measureArea'].forEach(id=>$(id).classList.remove('modeActive'));
+        $('measureInfo').innerHTML = '';
+        stagedClear = false;
+        return;
+      }
+
+      measureMode = mode;
+      ['measureDist','measureArea'].forEach(id=>$(id).classList.remove('modeActive'));
+      if (mode==='distance') $('measureDist').classList.add('modeActive');
+      if (mode==='area')     $('measureArea').classList.add('modeActive');
+      if (mode==='area') map.doubleClickZoom.disable(); else map.doubleClickZoom.enable();
+
+      if (mode==='distance') {
+        $('measureInfo').innerHTML =
+          'Modus <b>Strecke</b>:<br>Jeder Klick fügt einen Punkt hinzu (max. 20). Entfernungsmessung vom ersten bis zum letzten Marker. ' +
+          'Marker sind per Drag&Drop verschiebbar. Rechtsklick entfernt einen Marker.<br>' +
+          '<b>Entfernen:</b> entfernt den zuletzt gesetzten Punkt (priorisiert diesen Modus).<br>' +
+          '<b>Löschen:</b> zuerst alle Punkte der Strecke, erneuter Klick löscht alle restlichen Messpunkte.<br>' +
+          '<b>Beenden:</b> erneut auf „Strecke“ klicken oder ESC.';
+      } else if (mode==='area') {
+        $('measureInfo').innerHTML =
+          'Modus <b>Fläche</b>:<br> Jeder Klick fügt einen Punkt hinzu. Marker sind per Drag&Drop verschiebbar. ' +
+          'Fläche wird automatisch geschlossen. Rechtsklick entfernt einen Marker.<br>' +
+          '<b>Entfernen:</b> entfernt den zuletzt gesetzten Punkt (priorisiert diesen Modus).<br>' +
+          '<b>Löschen:</b> zuerst alle Punkte der Fläche, erneuter Klick löscht alle restlichen Messpunkte.<br>' +
+          '<b>Beenden:</b> erneut auf „Fläche“ klicken oder ESC.';
+      } else {
+        $('measureInfo').innerHTML = '';
+      }
+      stagedClear = false;
+    }
+
+    function clearMeasure(){
+      distMarkers.forEach(m=>map.removeLayer(m)); distMarkers = [];
+      if (distLine) { map.removeLayer(distLine); distLine=null; }
+      areaMarkers.forEach(m=>map.removeLayer(m)); areaMarkers = [];
+      if (areaPoly) { map.removeLayer(areaPoly); areaPoly=null; }
+      $('measureInfo').innerHTML = '';
+    }
+
+    function removeAllDistance(){
+      distMarkers.forEach(m=>map.removeLayer(m)); distMarkers = [];
+      if (distLine){ map.removeLayer(distLine); distLine=null; }
+    }
+    function removeAllArea(){
+      areaMarkers.forEach(m=>map.removeLayer(m)); areaMarkers = [];
+      if (areaPoly){ map.removeLayer(areaPoly); areaPoly=null; }
+    }
+    function hasDist(){ return distMarkers.length>0; }
+    function hasArea(){ return areaMarkers.length>0; }
+    function hasAny(){ return hasDist() || hasArea(); }
+
+    function clearMeasureSmart(){
+      if (!hasAny()) return;
+
+      if (!stagedClear){
+        if (measureMode==='distance' && hasDist()){
+          removeAllDistance();
+        } else if (measureMode==='area' && hasArea()){
+          removeAllArea();
+        } else if (hasDist()){
+          removeAllDistance();
+        } else if (hasArea()){
+          removeAllArea();
+        }
+        stagedClear = true;
+      } else {
+        clearMeasure();
+        stagedClear = false;
+      }
+      updateDistance();
+      updateArea();
+    }
+
+    function updateDistance(){
+      const n = distMarkers.length;
+      if (n < 1){
+        if (distLine){ map.removeLayer(distLine); distLine = null; }
+        if (measureMode==='distance'){
+          $('measureInfo').innerHTML = 'Punkte setzen, um eine Strecke zu bilden.<br><b>Entfernen</b> = letzten Punkt, <b>Löschen</b> = erst Strecke, dann alles.';
+        }
+        return;
+      }
+      const latlngs = distMarkers.map(m=>m.getLatLng());
+      if (!distLine) distLine = L.polyline(latlngs).addTo(map);
+      else distLine.setLatLngs(latlngs);
+
+      let total = 0;
+      for (let i=0; i<latlngs.length-1; i++){
+        total += latlngs[i].distanceTo(latlngs[i+1]);
+      }
+      const ptsTxt = `${n} Punkt${n===1?'':'e'}`;
+      const maxTxt = n===DIST_MAX_POINTS ? ' – Maximum erreicht' : '';
+      if (n >= 2){
+        if (measureMode==='distance'){
+          $('measureInfo').innerHTML = `<b>Strecke (gesamt):</b> ${fmtDist(total)}<br><span class="hint">${ptsTxt}${maxTxt}</span>`;
+        }
+      } else {
+        if (measureMode==='distance'){
+          $('measureInfo').innerHTML = `<span class="hint">${ptsTxt} – mind. 2 für Strecke</span>`;
         }
       }
+    }
+
+    function attachDistMarker(m){
+      m.on('drag', updateDistance);
+      const rm = () => {
+        removeMarkerFrom(distMarkers, m);
+        if (distMarkers.length < 2 && distLine){ map.removeLayer(distLine); distLine = null; }
+        updateDistance();
+      };
+      m.on('contextmenu', rm);
+      m.on('dblclick', rm);
+      return m;
+    }
+
+    function handleDistanceClick(latlng){
+      if (distMarkers.length >= DIST_MAX_POINTS){
+        if (measureMode==='distance'){
+          $('measureInfo').innerHTML = `<b>Strecke (gesamt):</b> —<br><span class="hint">Maximal ${DIST_MAX_POINTS} Punkte erreicht.</span>`;
+        }
+        return;
+      }
+      const m = attachDistMarker(L.marker(latlng, {draggable:true}).addTo(map));
+      distMarkers.push(m);
+      stagedClear = false;
+      updateDistance();
+    }
+
+    function computeAreaUTM(latlngs){
+      const n = latlngs.length; if (n<3) return { area:0, perimeter:0 };
+      const avgLat = latlngs.reduce((s,p)=>s+p.lat,0)/n;
+      const avgLng = latlngs.reduce((s,p)=>s+p.lng,0)/n;
+      const zone = lonToUtmZone(avgLng);
+      const hem  = avgLat>=0 ? 'N' : 'S';
+      const utmDef = utmProjString(zone, hem);
+      const pts = latlngs.map(p => proj4('EPSG:4326', utmDef, [p.lng, p.lat]));
+      let sum = 0; for (let i=0;i<n;i++){ const [xi, yi]=pts[i]; const [xj, yj]=pts[(i+1)%n]; sum += xi*yj - xj*yi; }
+      const area = Math.abs(sum)/2;
+      let per = 0; for (let i=0;i<n;i++){ per += latlngs[i].distanceTo(latlngs[(i+1)%n]); }
+      return { area, perimeter: per };
+    }
+
+    function updateArea(){
+      const latlngs = areaMarkers.map(m=>m.getLatLng());
+      if (latlngs.length===0){
+        if (areaPoly){ map.removeLayer(areaPoly); areaPoly=null; }
+        if (measureMode==='area'){
+          $('measureInfo').innerHTML='Punkte setzen, um ein Polygon zu bilden.<br><b>Entfernen</b> = letzten Punkt, <b>Löschen</b> = erst Fläche, dann alles.';
+        }
+        return;
+      }
+      if (!areaPoly) areaPoly = L.polygon(latlngs, {fillOpacity:0.1}).addTo(map);
+      else areaPoly.setLatLngs(latlngs);
+      if (latlngs.length>=3){
+        const { area, perimeter } = computeAreaUTM(latlngs);
+        if (measureMode==='area'){
+          $('measureInfo').innerHTML = `<b>Fläche:</b> ${fmtArea(area)}<br><b>Umfang:</b> ${fmtDist(perimeter)}<br><span class="hint">${latlngs.length} Punkte</span>`;
+        }
+      } else {
+        let per=0; for (let i=0;i<latlngs.length-1;i++) per += latlngs[i].distanceTo(latlngs[i+1]);
+        if (measureMode==='area'){
+          $('measureInfo').innerHTML = `<b>Umfang (offen):</b> ${fmtDist(per)}<br><span class="hint">${latlngs.length} Punkte – mind. 3 für Fläche</span>`;
+        }
+      }
+    }
+
+    function handleAreaClick(latlng){
+      const m = L.marker(latlng, {draggable:true}).addTo(map);
+      m.on('drag', updateArea);
+      m.on('contextmenu', () => { removeMarkerFrom(areaMarkers, m); updateArea(); });
+      m.on('dblclick', () => { removeMarkerFrom(areaMarkers, m); updateArea(); });
+      areaMarkers.push(m);
+      stagedClear = false;
+      updateArea();
+    }
+
+    function onMapClick(e){
+      if (measureMode==='none'){
+        marker.setLatLng(e.latlng);
+        setLatLng(e.latlng.lat, e.latlng.lng, 'map');
+        return;
+      }
+      if (measureMode==='distance') { handleDistanceClick(e.latlng); return; }
+      if (measureMode==='area')     { handleAreaClick(e.latlng);    return; }
+    }
+
+    /* ===== Live-Koordinaten-HUD ===== */
+    function updateCoordHUD(latlng){
+      const lat = Number(latlng.lat), lng = Number(latlng.lng);
+      const dd = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      const utm = getUTMString(lat, lng);
+      const mgrsStr = getMGRSString(lat, lng);
+      const ddEl=$('hudDD'), utmEl=$('hudUTM'), mEl=$('hudMGRS');
+      if (ddEl) ddEl.textContent = dd;
+      if (utmEl) utmEl.textContent = utm;
+      if (mEl) mEl.textContent = mgrsStr;
+    }
+    function refreshHudVisibility(){
+      const on = $('hudToggle')?.checked ?? true;
+      const hud = $('coordHud');
+      if (hud) hud.style.display = on ? 'block' : 'none';
+    }
+
+    /* ===== Sync & Geocoding & Inputs ===== */
+    function setLatLng(lat, lng, src="") {
+      lat = Math.max(-90, Math.min(90, Number(lat)));
+      lng = normLngWrap(lng);
+      if (src !== 'map' && marker && map) { marker.setLatLng([lat, lng]); map.panTo([lat, lng], { animate: true }); }
+      $('lat').value = lat.toFixed(6).slice(0,12);
+      $('lng').value = lng.toFixed(6).slice(0,13);
+      if (src !== 'dms') setDMSFields(lat, lng);
+      setUTMFieldsFromLatLng(lat, lng);
+      setMGRSFieldsFromLatLng(lat, lng);
+      if ($('gridType').value !== 'none') updateGrid();
+      updateCoordHUD({lat, lng});
+    }
+
+    async function doSearch(){
+      const q = $('addrQuery').value.trim();
+      const sel = $('addrResults'); sel.style.display='none'; sel.innerHTML='';
+      if (!q) return;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5`, { headers:{'Accept-Language':'de'} });
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length===0) return;
+        sel.style.display='block';
+        sel.innerHTML = data.map((d,i)=>`<option value="${i}">${d.display_name}</option>`).join('');
+        sel.onchange = () => { const d = data[Number(sel.value)]; if (d) setLatLng(parseFloat(d.lat), parseFloat(d.lon), 'addr'); };
+        const first = data[0];
+        setLatLng(parseFloat(first.lat), parseFloat(first.lon), 'addr');
+      } catch(e){ console.warn('Geocoding fehlgeschlagen', e); }
+    }
+
+    /* ===== Events ===== */
+    document.addEventListener('DOMContentLoaded', async () => {
+      const START_LAT = 49.0954122;
+      const START_LNG = 8.0038251;
+
+      initMap(START_LAT, START_LNG);
+
+      const ok = await mgrsReady.catch(()=>false);
+      if (!ok) {
+        $('mgrsWarn').textContent = 'MGRS konnte nicht geladen werden (CDN/MIME-Blockierung).';
+        $('mgrsWarn').style.display = 'block';
+      } else {
+        try {
+          const { lat, lng } = marker.getLatLng();
+          setMGRSFieldsFromLatLng(lat, lng);
+          redrawGridNow();
+        } catch(e){ console.warn('Post-MGRS init failed', e); }
+      }
+
+      setLatLng(START_LAT, START_LNG, 'init');
+
+      // HUD
+      $('hudToggle').addEventListener('change', refreshHudVisibility);
+      refreshHudVisibility();
+
+      // UI-Events
+      $('addrForm').addEventListener('submit', (e)=>{ e.preventDefault(); doSearch(); });
+      $('addrSearch').addEventListener('click', (e)=>{ e.preventDefault(); doSearch(); });
+      $('addrReset').addEventListener('click', () => {
+        $('addrQuery').value = ""; $('addrResults').innerHTML = ""; $('addrResults').style.display = 'none';
+        setLatLng(START_LAT, START_LNG, 'reset');
+        redrawGridNow();
+      $('addrCenter').addEventListener('click', () => {
+      if (marker && map) {
+        const ll = marker.getLatLng();
+        map.panTo(ll, { animate:true });
+    }
     });
+  
+      });
 
-    // Kopf- & Fußbereich pro Seite
-    const pageCount = doc.internal.getNumberOfPages();
-    for(let i=1;i<=pageCount;i++){
-      doc.setPage(i);
-
-      // Kopfband
-      doc.setFillColor(245,249,255);
-      doc.rect(0,0,pageWidth,headerBandH,'F');
-      doc.setDrawColor(229,231,235);
-      doc.setLineWidth(0.8);
-      doc.line(40, headerBandH-2, pageWidth-40, headerBandH-2);
-
-      // Logo oder Fallback-Text
-      if(haveLogo){
-        // Verhältnis bestimmen (aus brandNatural oder direkt vom <img>)
-        const ratio = (brandNatural.w > 0 && brandNatural.h > 0)
-          ? (brandNatural.w / brandNatural.h)
-          : (logoHasEl ? (imgEl.naturalWidth / imgEl.naturalHeight) : 4);
-
-        const maxH = 38, maxW = pageWidth * 0.42;
-        let drawH = maxH, drawW = Math.min(maxW, drawH * ratio);
-        if(drawW > maxW){ drawW = maxW; drawH = drawW / ratio; }
-
+      /* DD (lat/lng) */
+      $('lat').addEventListener('input', ()=> {
         try{
-          // logoSrc kann DataURL ODER HTMLImageElement sein
-          doc.addImage(logoSrc, 'PNG', 40, 18, drawW, drawH, undefined, 'FAST');
-        }catch(e){
-          console.warn('Logo konnte nicht eingebettet werden:', e);
-          doc.setFont('helvetica','bold'); doc.setTextColor(30,58,138); doc.setFontSize(14);
-          doc.text('DienstOrbit',40,30,{align:'left'});
-        }
-      } else {
-        doc.setFont('helvetica','bold'); doc.setTextColor(30,58,138); doc.setFontSize(14);
-        doc.text('DienstOrbit',40,30,{align:'left'});
+          $('lat').value = $('lat').value.replace(/[^0-9.\-]/g,'').slice(0, $('lat').maxLength);
+          const la = parseFloat($('lat').value), lo = parseFloat($('lng').value);
+          if (!Number.isNaN(la) && !Number.isNaN(lo)) { setLatLng(la, lo, 'dd'); redrawGridNow(); }
+        }catch(e){ console.warn('lat input error', e); }
+      });
+      $('lng').addEventListener('input', ()=> {
+        try{
+          $('lng').value = $('lng').value.replace(/[^0-9.\-]/g,'').slice(0, $('lng').maxLength);
+          const la = parseFloat($('lat').value), lo = parseFloat($('lng').value);
+          if (!Number.isNaN(la) && !Number.isNaN(lo)) { setLatLng(la, lo, 'dd'); redrawGridNow(); }
+        }catch(e){ console.warn('lng input error', e); }
+      });
+
+      /* DMS */
+      ['latDeg','latMin','latSec','latHem','lngDeg','lngMin','lngSec','lngHem'].forEach(id=>{
+        $(id).addEventListener('input', ()=>{
+          try{
+            const la = fromDMS($('latDeg').value, $('latMin').value, $('latSec').value, $('latHem').value, true);
+            const lo = fromDMS($('lngDeg').value, $('lngMin').value, $('lngSec').value, $('lngHem').value, false);
+            if (la==null || lo==null) return;
+            setLatLng(la, lo, 'dms');
+            redrawGridNow();
+          }catch(e){ console.warn('dms input error', e); }
+        });
+      });
+
+      /* UTM */
+      ['utmZone','utmHem','utmOstwert','utmNordwert'].forEach(id=> {
+        $(id).addEventListener('input', ()=>{
+          try{ updateFromUTMInputs(); redrawGridNow(); }
+          catch(e){ console.warn('utm input error', e); }
+        });
+      });
+      $('utmHem').addEventListener('change', ()=> setUtmNordMaxLen($('utmHem').value));
+
+      /* MGRS */
+      function updateFromMGRSInputsSafe(){
+        try{ updateFromMGRSInputs(); redrawGridNow(); }
+        catch(e){ console.warn('mgrs input error', e); }
       }
+      ['mgrsZoneBand','mgrs100k','mgrsE','mgrsN'].forEach(id=> $(id).addEventListener('input', updateFromMGRSInputsSafe));
 
-      // rechter Header-Text
-      doc.setTextColor(30,58,138);
-      doc.setFontSize(11);
-      const prefix   = 'Dienstplan für ';
-      const boldPart = [ovName, years].filter(Boolean).join(' • ');
-      doc.setFont('helvetica','normal'); const prefixW = doc.getTextWidth(prefix);
-      doc.setFont('helvetica','bold');   const boldW   = doc.getTextWidth(boldPart);
-      const totalW  = prefixW + boldW;
-      const xRight  = pageWidth - 40;
-      const yHeader = 32;
-      const xStart  = xRight - totalW;
-      doc.setFont('helvetica','normal'); doc.text(prefix, xStart, yHeader);
-      doc.setFont('helvetica','bold');   doc.text(boldPart, xStart + prefixW, yHeader);
+      /* Copy-Buttons */
+      $('copyUtm').addEventListener('click', (e)=>copyById('utmString', e.currentTarget));
+      $('copyMgrs').addEventListener('click', (e)=>copyById('mgrsString', e.currentTarget));
 
-      // Fußzeile
-      const yBase = pageHeight - 26;
-      doc.setDrawColor(229,231,235); doc.setLineWidth(0.8);
-      doc.line(40, yBase-16, pageWidth-40, yBase-16);
-      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
-      doc.text(`Erstellt am ${new Date().toLocaleString('de-DE')}`, 40, yBase);
-      doc.text('© 2025 DienstOrbit – Wolfgang Saal', pageWidth/2, yBase, { align:'center' });
-      doc.text(`Seite ${i} / ${pageCount}`, pageWidth-40, yBase, { align:'right' });
+      /* Messen */
+      $('measureDist').addEventListener('click', ()=> setMode('distance'));
+      $('measureArea').addEventListener('click', ()=> setMode('area'));
+      $('measureClear').addEventListener('click', (e)=>{ e.preventDefault(); clearMeasureSmart(); });
+      $('measureUndo').addEventListener('click', (e)=>{ e.preventDefault(); undoLastMarker(); });
+
+      // ESC beendet Messung
+      document.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape'){
+          if (measureMode!=='none'){ setMode(measureMode); } // toggelt auf 'none'
+        }
+      });
+
+      /* Basiskarte + Raster-UI (sofort neu zeichnen) */
+      $('baseLayer').addEventListener('change', e => switchBaseLayer(e.target.value));
+      $('gridType').addEventListener('change', ()=>{ refreshGridOptionsVisibility(); enforceGridMinScale(); redrawGridNow(); });
+      $('gridLabelsChk').addEventListener('change', redrawGridNow);
+
+      const pickerLine = $('gridColor');
+      const pickerLbl  = $('gridLabelColor');
+      pickerLine.addEventListener('input', (e)=>{ document.documentElement.style.setProperty('--grid', e.target.value); redrawGridNow(); });
+      pickerLbl.addEventListener('input', (e)=>{ document.documentElement.style.setProperty('--grid-label', e.target.value); redrawGridNow(); });
+
+      $('gridAutoContrast').addEventListener('change', ()=>{ refreshGridOptionsVisibility(); maybeApplyAutoContrast(); redrawGridNow(); });
+
+      /* initial */
+      refreshGridOptionsVisibility();
+      maybeApplyAutoContrast();
+      enforceGridMinScale();
+      updateGrid();
+    });
+
+    /* Kopieren-Helfer */
+    function copyById(id, btn){
+      const el = document.getElementById(id);
+      const txt = (el && 'value' in el) ? el.value : '';
+      if (!txt) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(()=>{
+          btn.classList.add('copied');
+          setTimeout(()=>{ btn.classList.remove('copied'); }, 900);
+        });
+      } else {
+        el.select?.(); document.execCommand?.('copy');
+      }
     }
 
-    // Speichern
-    doc.save(`${buildBaseFileName()}.pdf`);
-  })();
-}
+    /* ===== Entfernen: letzten Punkt löschen (mit Priorität) ===== */
+    function undoLastMarker(){
+      const removeLast = (arr) => {
+        if (!arr.length) return false;
+        const last = arr.pop();
+        map.removeLayer(last);
+        return true;
+      };
 
-/* ========= Export: Excel ========= */
-async function exportXlsx(){
-  const tbody=$('#tabelleBody'); if(!tbody||!tbody.rows.length) return;
+      let did = false;
 
-  async function loadSheetJS(){
-    if(typeof window.XLSX!=='undefined') return true;
-    const srcs=['https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js'];
-    const tryLoad=src=>new Promise(res=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.crossOrigin='anonymous'; const t=setTimeout(()=>res(false),7000); s.onload=()=>{clearTimeout(t); res(typeof window.XLSX!=='undefined')}; s.onerror=()=>{clearTimeout(t); res(false)}; document.head.appendChild(s); });
-    for(const u of srcs){ if(await tryLoad(u)) return true; } return false;
-  }
-  const loaded=await loadSheetJS(); if(!loaded){ alert('Konnte SheetJS nicht laden.'); return; }
-
-  try{
-    const XLSX=window.XLSX, wb=XLSX.utils.book_new();
-    const header=getCleanHeaderTexts($('#ergebnisTabelle'));
-    const data=[ ...tbody.rows ].map(tr=>{
-      const r=readRowExportValues(tr);
-      return [r.dateDisplay, r.weekday, r.dienstRaw, displayTimeRange(r.timeStart,r.timeEnd), r.hint];
-    });
-    const ws=XLSX.utils.aoa_to_sheet([header, ...data]);
-    const colWidths=[]; [header, ...data].forEach(row=>row.forEach((cell,i)=>{ const len=(cell?cell.toString(): '').length; colWidths[i]=Math.max(colWidths[i]||10, len+2); }));
-    ws['!cols']=colWidths.map(w=>({wch:w}));
-    XLSX.utils.book_append_sheet(wb, ws, 'Dienstplan');
-
-    try{ XLSX.writeFile(wb, `${buildBaseFileName()}.xlsx`, { compression:true }); }
-    catch{ const out=XLSX.write(wb,{bookType:'xlsx', type:'array', compression:true}); const blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${buildBaseFileName()}.xlsx`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
-  }catch(err){ console.error(err); alert('Excel-Export fehlgeschlagen. Details in der Konsole.'); }
-}
-
-/* ========= Buttons / Sichtbarkeit ========= */
-document.getElementById('btnCsv').addEventListener('click', exportCsv);
-document.getElementById('btnPdf').addEventListener('click', exportPdf);
-document.getElementById('btnIcs').addEventListener('click', exportIcs);
-document.getElementById('btnXlsx').addEventListener('click', exportXlsx);
-
-const btnToTop=$('#btnToTop'), btnToResults=$('#btnToResults'), btnToExport=$('#btnToExport');
-function hasResultsVisible(){ return !$('#ergebnisTabelle').classList.contains('hidden'); }
-function mostlyInViewport(el){ if(!el) return false; const r=el.getBoundingClientRect(); const vh=window.innerHeight||document.documentElement.clientHeight; const vis=Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)); return vis >= (r.height*0.6); }
-function updateToTopVisibility(){ btnToTop.classList.toggle('show', window.scrollY>200); }
-function updateResultsButtonVisibility(){ const show=hasResultsVisible() && !mostlyInViewport($('#ergebnisTitel')); btnToResults.classList.toggle('show', !!show); }
-function updateExportButtonVisibility(){ const enabled = !$('#btnCsv').disabled || !$('#btnPdf').disabled || !$('#btnIcs').disabled || !$('#btnXlsx').disabled; btnToExport.classList.toggle('show', enabled); }
-
-window.addEventListener('scroll', ()=>{ updateToTopVisibility(); updateResultsButtonVisibility(); }, { passive:true });
-window.addEventListener('resize', ()=>{ updateToTopVisibility(); updateResultsButtonVisibility(); });
-
-btnToTop.addEventListener('click', ()=>{ window.scrollTo({ top:0, behavior: prefersReduced?'auto':'smooth' }); try{ $('#pageTop').focus({preventScroll:true}); }catch{} });
-btnToResults.addEventListener('click', ()=>{ const a=$('#ergebnisTitel'); if(a && hasResultsVisible()){ a.scrollIntoView({ behavior: prefersReduced?'auto':'smooth', block:'start' }); try{ a.focus({preventScroll:true}); }catch{} }});
-btnToExport.addEventListener('click', ()=>{ $('#exportButtons')?.scrollIntoView({ behavior: prefersReduced?'auto':'smooth', block:'start' }); });
-
-const exportObserver=new MutationObserver(()=> updateExportButtonVisibility());
-['#btnCsv','#btnPdf','#btnIcs','#btnXlsx'].forEach(sel=>{ const el=$(sel); if(el) exportObserver.observe(el,{attributes:true, attributeFilter:['disabled','class']}); });
-
-/* === Termine ermitteln === */
-document.getElementById('btnBerechnen').addEventListener('click', async ()=>{
-  try{
-    if (!validateInputs()){ toggleExportButtons(false); updateResultsButtonVisibility(); updateToolbarVisibility(); return; }
-
-    const bundesland=$('#bundesland').value;
-    const subdivision=mapBundeslandToSubdivision(bundesland);
-    const dienstAnFeiertagen=$('#feiertagsCheck').checked;
-    const dienstInFerien=$('#ferienCheck').checked;
-    const regelungInReihen=$('#reihenRegelungCheck').checked;
-
-    const {minYear,maxYear}=getYearBounds();
-    const jahre=new Set();
-    document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(r=>{
-      const s=r.querySelector('.dienst_start').value; const e=r.querySelector('.dienst_ende').value;
-      if(s){ const y=new Date(s).getFullYear(); if(y>=minYear&&y<=maxYear) jahre.add(y); }
-      if(e){ const y2=new Date(e).getFullYear(); if(y2>=minYear&&y2<=maxYear) jahre.add(y2); }
-    });
-    if(jahre.size===0) jahre.add(new Date().getFullYear());
-
-    const [feiertageMap, ferienMap]=await Promise.all([
-      fetchPublicHolidaysForYears([...jahre], subdivision),
-      fetchSchoolHolidaysForYears([...jahre], subdivision)
-    ]);
-
-    const tbody=$('#tabelleBody'); tbody.innerHTML=''; $('#ergebnisTabelle').classList.add('hidden');
-
-    const tagZuIndex={Sonntag:0, Montag:1, Dienstag:2, Mittwoch:3, Donnerstag:4, Freitag:5, Samstag:6};
-    const alleTermine=[];
-
-    document.querySelectorAll('#terminreihen-container > .terminreihe').forEach(reihe=>{
-      const bezO=reihe.querySelector('.dienst_bezeichnung').value;
-      const woch=reihe.querySelector('.dienst_wochentag').value;
-      const turn=reihe.querySelector('.dienst_turnus').value;
-      const mpos =reihe.querySelector('.dienst_monat_position')?.value;
-      const dS=new Date(reihe.querySelector('.dienst_start').value);
-      const dE=new Date(reihe.querySelector('.dienst_ende').value);
-      const tS=reihe.querySelector('.dienst_startzeit').value;
-      const tE=reihe.querySelector('.dienst_endzeit').value;
-
-      let cur=new Date(dS); const ziel=tagZuIndex[woch]; const termine=[];
-      if (turn==='monatlich'){
-        cur.setDate(1);
-        while (cur<=dE){
-          const y=cur.getFullYear(), m=cur.getMonth();
-          const first=new Date(y,m,1), last=new Date(y,m+1,0);
-          const tage=[]; for(let d=new Date(first); d<=last; d.setDate(d.getDate()+1)) if(d.getDay()===ziel) tage.push(new Date(d));
-          const idx=(mpos==='-1')? (tage.length-1): (parseInt(mpos||'1',10)-1);
-          if(idx>=0 && idx<tage.length){ const ch=tage[idx]; if(ch>=dS && ch<=dE) termine.push(ch); }
-          cur=new Date(y,m+1,1);
-        }
+      if (measureMode === 'distance'){
+        did = removeLast(distMarkers);
+        if (!did) did = removeLast(areaMarkers);
+      } else if (measureMode === 'area'){
+        did = removeLast(areaMarkers);
+        if (!did) did = removeLast(distMarkers);
       } else {
-        while(cur.getDay()!==ziel) cur.setDate(cur.getDate()+1);
-        while(cur<=dE){ if(cur>=dS) termine.push(new Date(cur)); cur.setDate(cur.getDate() + (turn==='2woechentlich'?14:7)); }
+        if (distMarkers.length) did = removeLast(distMarkers);
+        else if (areaMarkers.length) did = removeLast(areaMarkers);
       }
 
-      for (const d of termine){
-        const iso=ymd(d);
-        const ferienname = ferienMap[iso] || '';
-        const feiertag   = feiertageMap[iso] || '';
+      if (!did) return;
 
-        // maßgebliche Schalter bestimmen
-        const reihenDienstAnFeiertagen = regelungInReihen
-          ? !!reihe.querySelector('.reihe_feiertag_check')?.checked
-          : dienstAnFeiertagen;
+      if (distMarkers.length < 2 && distLine){ map.removeLayer(distLine); distLine = null; }
+      if (areaMarkers.length < 1 && areaPoly){ map.removeLayer(areaPoly); areaPoly = null; }
 
-        const reihenDienstInFerien = regelungInReihen
-          ? !!reihe.querySelector('.reihe_ferien_check')?.checked
-          : dienstInFerien;
-
-        let bezeichnung=bezO; let hintType=''; let hintText='';
-
-        if(!reihenDienstInFerien && ferienname){ bezeichnung=`Entfällt: ${bezO}`; hintType='Ferien';    hintText=ferienname; }
-        else if(!reihenDienstAnFeiertagen && feiertag){ bezeichnung=`Entfällt: ${bezO}`; hintType='Feiertag'; hintText=feiertag; }
-        else if(feiertag){ hintType='Feiertag'; hintText=feiertag; }
-
-        alleTermine.push({ datum:d, iso, bezeichnung, zeitStart:tS, zeitEnde:tE, hintType, hintText });
-      }
-    });
-
-    // Sortieren (Datum)
-    alleTermine.sort((a,b)=>a.datum - b.datum);
-
-    // Rendern
-    alleTermine.forEach(x=>{
-      const tr=document.createElement('tr');
-
-      tr.dataset.dateIso   = x.iso;
-      tr.dataset.dienstRaw = x.bezeichnung;
-      tr.dataset.hint      = x.hintText || '';
-      tr.dataset.timeStart = x.zeitStart || '';
-      tr.dataset.timeEnd   = x.zeitEnde  || '';
-
-      if(x.hintText) tr.classList.add('feiertag-row');
-      const day=x.datum.getDay(); if(day===0||day===6) tr.classList.add('wknd');
-
-      const isCancelled=/^Entfällt:\s*/i.test(x.bezeichnung);
-      const dienstTitle=isCancelled? x.bezeichnung.replace(/^Entfällt:\s*/i,'') : x.bezeichnung;
-      const dienstCell=isCancelled ? `${dienstTitle} <span class="chip chip-cancel">Entfällt</span>` : dienstTitle;
-      const hintCell=x.hintText ? `<span class="chip chip-info">${x.hintType}</span> ${x.hintText}` : '';
-
-      tr.innerHTML=`
-        <td class="border px-4 py-2">${String(x.datum.getDate()).padStart(2,'0')}.${String(x.datum.getMonth()+1).padStart(2,'0')}.${x.datum.getFullYear()}</td>
-        <td class="border px-4 py-2">${['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][day]}</td>
-        <td class="border px-4 py-2">${dienstCell}</td>
-        <td class="border px-4 py-2">${displayTimeRange(x.zeitStart, x.zeitEnde)}</td>
-        <td class="border px-4 py-2">${hintCell}</td>`;
-      $('#tabelleBody').appendChild(tr);
-    });
-
-    const hasRows=alleTermine.length>0, tableEl=$('#ergebnisTabelle'), titleEl=$('#ergebnisTitel'), dividerEl=$('#ergebnisDivider');
-    if(hasRows){
-      tableEl.classList.remove('hidden'); titleEl.classList.remove('hidden'); dividerEl.classList.remove('hidden'); toggleExportButtons(true);
-
-      // Toolbar anzeigen, Features aktivieren
-      updateToolbarVisibility();
-      attachTableFeatures();
-
-      requestAnimationFrame(()=>{ titleEl.scrollIntoView({behavior: prefersReduced?'auto':'smooth', block:'start'}); try{ titleEl.focus({preventScroll:true}); }catch{} updateToTopVisibility(); });
-    } else {
-      tableEl.classList.add('hidden'); titleEl.classList.add('hidden'); dividerEl.classList.add('hidden'); toggleExportButtons(false);
-      updateToolbarVisibility();
-      alert('Keine gültigen Termine ermittelt.');
+      updateDistance();
+      updateArea();
+      stagedClear = false;
     }
-  }catch(err){
-    console.error(err);
-    alert('Es ist ein Fehler beim Ermitteln der Termine aufgetreten: ' + (err?.message || err));
-  }
-});
 
-/* ========= Mapping + Datenquellen ========= */
-function getBundeslandText(){
-  const opt=$('#bundesland option:checked'); const t=(opt?.textContent||'').trim();
-  return t && t!=='Bitte wählen' ? t : '';
-}
-function mapBundeslandToSubdivision(bl){
-  const m={'BW':'DE-BW','BY':'DE-BY','BE':'DE-BE','BB':'DE-BB','HB':'DE-HB','HH':'DE-HH','HE':'DE-HE','MV':'DE-MV','NI':'DE-NI','NW':'DE-NW','RP':'DE-RP','SL':'DE-SL','SN':'DE-SN','ST':'DE-ST','SH':'DE-SH','TH':'DE-TH'};
-  return m[bl]||'';
-}
-
-/* --- OpenHolidaysAPI: Feiertage --- */
-async function fetchPublicHolidaysForYears(years, subdivision){
-  const map={};
-  const base='https://openholidaysapi.org/PublicHolidays';
-  const qs=(y,useSubdivision=true)=> base+`?countryIsoCode=DE&languageIsoCode=DE&validFrom=${y}-01-01&validTo=${y}-12-31`+(useSubdivision&&subdivision?`&subdivisionCode=${encodeURIComponent(subdivision)}`:'');
-  for(const y of years){
-    try{
-      let res=await fetch(qs(y,true),{ headers:{'accept':'application/json'} });
-      let data=res.ok?await res.json():null;
-      if(!res.ok || !Array.isArray(data) || data.length===0){
-        res=await fetch(qs(y,false),{ headers:{'accept':'application/json'} });
-        data=res.ok?await res.json():[];
+    /* MGRS conversions (robust) */
+    function setMGRSFieldsFromLatLng(lat, lng) {
+      if (typeof mgrs !== 'object') {
+        $('mgrsWarn').textContent = 'MGRS-Bibliothek nicht geladen.';
+        $('mgrsWarn').style.display = 'block';
+        $('mgrsZoneBand').value=$('mgrs100k').value=$('mgrsE').value=$('mgrsN').value=$('mgrsString').value="";
+        return;
       }
-      (data||[]).forEach(item=>{
-        const name=extractName(item) || item?.englishName || '';
-        const start=item?.startDate || item?.validFrom || item?.date || '';
-        const end=item?.endDate || item?.validTo || item?.date || '';
-        addRangeDatesToMap(map,start,end,name);
-      });
-    }catch(e){}
-  }
-  return map;
-}
+      try {
+        let m = mgrs.forward([lng, lat], 5);
+        m = (m || '').toUpperCase().replace(/\s+/g, '');
+        const zoneBand = m.slice(0,3), k100 = m.slice(3,5), e = m.slice(5,10), n = m.slice(10,15);
+        $('mgrsZoneBand').value = zoneBand || '';
+        $('mgrs100k').value     = k100 || '';
+        $('mgrsE').value        = e || '';
+        $('mgrsN').value        = n || '';
+        $('mgrsString').value   = [zoneBand, k100, e, n].filter(Boolean).join(' ');
+        $('mgrsWarn').style.display = 'none';
+      } catch (err) {
+        console.error('MGRS aus Lat/Lng fehlgeschlagen:', err);
+        $('mgrsZoneBand').value=$('mgrs100k').value=$('mgrsE').value=$('mgrsN').value=$('mgrsString').value="";
+        $('mgrsWarn').textContent = 'MGRS-Umrechnung fehlgeschlagen.';
+        $('mgrsWarn').style.display = 'block';
+      }
+    }
+    function updateFromMGRSInputs() {
+      if (typeof mgrs !== 'object') {
+        $('mgrsWarn').textContent = 'MGRS-Bibliothek nicht geladen.';
+        $('mgrsWarn').style.display = 'block';
+        return;
+      }
+      const zb = ($('mgrsZoneBand').value||'').toUpperCase().replace(/\s+/g,'').slice(0,3);
+      const k  = ($('mgrs100k').value||'').toUpperCase().replace(/\s+/g,'').slice(0,2);
+      const e  = ($('mgrsE').value||'').replace(/\D/g,'').slice(0,5);
+      const n  = ($('mgrsN').value||'').replace(/\D/g,'').slice(0,5);
 
-/* --- OpenHolidaysAPI: Schulferien --- */
-async function fetchSchoolHolidaysForYears(years, subdivision){
-  const map={}; if(!subdivision) return map;
-  const base='https://openholidaysapi.org/SchoolHolidays';
-  const qs=(y)=> base+`?countryIsoCode=DE&subdivisionCode=${encodeURIComponent(subdivision)}&languageIsoCode=DE&validFrom=${y}-01-01&validTo=${y}-12-31`;
-  for(const y of years){
-    try{
-      const res=await fetch(qs(y),{ headers:{'accept':'application/json'} });
-      if(!res.ok) continue;
-      const data=await res.json();
-      (data||[]).forEach(item=>{
-        const name=extractName(item) || item?.englishName || 'Ferien';
-        const start=item?.startDate || item?.validFrom || '';
-        const end=item?.endDate || item?.validTo || start;
-        addRangeDatesToMap(map,start,end,name);
-      });
-    }catch(e){}
-  }
-  return map;
-}
-function extractName(obj){
-  const n=obj?.name; if(!n) return '';
-  if(typeof n==='string') return n;
-  if(Array.isArray(n)){
-    const de=n.find(x=>x.language==='DE'||x.languageIsoCode==='DE');
-    return (de?.text||de?.name||n[0]?.text||n[0]?.name||'').toString();
-  }
-  return String(n);
-}
-function addRangeDatesToMap(map, startStr, endStr, name){
-  if(!startStr) return;
-  const s=ymdToLocalDate(startStr.slice(0,10));
-  const e=ymdToLocalDate((endStr||startStr).slice(0,10));
-  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){
-    const key=ymd(d); map[key]=map[key]? map[key]+' / '+name: name;
-  }
-}
-/* ========= Ende ========= */
+      $('mgrsZoneBand').value = zb; $('mgrs100k').value = k; $('mgrsE').value = e; $('mgrsN').value = n;
+
+      const spaced  = [zb, k, e, n].filter(Boolean).join(' ');
+      const compact = zb + k + e + n;
+      $('mgrsString').value = spaced;
+
+      if (zb && !k) { $('mgrsWarn').textContent = 'GZD erkannt – bitte 100km-Feld (z. B. NV) und Ost-/Nordwert eingeben.'; $('mgrsWarn').style.display = 'block'; return; }
+      if (zb && k && (!e || !n)) { $('mgrsWarn').textContent = '100km-Feld erkannt – bitte Ostwert/Nordwert (je 1–5 Ziffern, gleiche Länge) eingeben.'; $('mgrsWarn').style.display = 'block'; return; }
+      if (e && n && e.length !== n.length) { $('mgrsWarn').textContent = 'Ostwert/Nordwert müssen die gleiche Stellenzahl haben (1–5).'; $('mgrsWarn').style.display = 'block'; return; }
+      if ((compact||'').length < 7) { $('mgrsWarn').textContent = 'Bitte MGRS vollständig eingeben: z. B. 32U NV 12 34 … 32U NV 12345 67890.'; $('mgrsWarn').style.display = zb ? 'block' : 'none'; return; }
+
+      try {
+        let lonLat;
+        try { lonLat = mgrs.toPoint(compact); }
+        catch { lonLat = mgrs.toPoint(spaced); }
+        const [lon, lat] = lonLat;
+        setLatLng(lat, lon, 'mgrs');
+        $('mgrsWarn').style.display = 'none';
+      } catch (err) {
+        console.error('MGRS-Eingabe ungültig:', err, {spaced, compact});
+        $('mgrsWarn').textContent = 'MGRS-Eingaben ungültig – prüfe Zone+Band, 100km-Feld sowie E/N.';
+        $('mgrsWarn').style.display = 'block';
+      }
+    }
+
+    /* ===== Taktische Zeit (TT hhmm MMM JJ) ===== */
+    (function(){
+      const WEEK_TT  = ['SO','MO','DI','MI','DO','FR','SA'];
+      const MONTH_MM = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      const pad2 = n => String(n).padStart(2, '0');
+
+      function formatTac(d){
+        return {
+          tt:   WEEK_TT[d.getDay()],
+          hhmm: pad2(d.getHours()) + pad2(d.getMinutes()),
+          mmm:  MONTH_MM[d.getMonth()],
+          jj:   String(d.getFullYear()).slice(-2),
+        };
+      }
+
+      function ensureTacBox(){
+        const header = document.querySelector('header.brand') || document.querySelector('header');
+        if (!header) return null;
+
+        let box = document.getElementById('tacTimeBox');
+        if (box) return box;
+
+        box = document.createElement('div');
+        box.id = 'tacTimeBox';
+        box.setAttribute('aria-label', 'Taktische Zeit');
+        box.style.cssText = [
+          'margin-left:auto',
+          'display:flex',
+          'gap:6px',
+          'align-items:baseline',
+          'background:rgba(255,255,255,0.06)',
+          'border:1px solid #2b3446',
+          'padding:6px 8px',
+          'border-radius:8px',
+          'font:12px/1.1 Arial,sans-serif',
+          'white-space:nowrap'
+        ].join(';');
+
+        const sTT   = document.createElement('span');
+        const sHHMM = document.createElement('span');
+        const sMJ   = document.createElement('span');
+
+        sTT.id = 'tacTT';
+        sHHMM.id = 'tacHHMM';
+        sMJ.id = 'tacMMMJJ';
+
+        sTT.style.cssText   = 'color:#ffffff;font-weight:700;letter-spacing:.3px;';
+        sHHMM.style.cssText = 'color:var(--brand, #8fb4ff);font-weight:800;letter-spacing:.6px;';
+        sMJ.style.cssText   = 'color:#ffffff;font-weight:700;letter-spacing:.3px;';
+
+        box.appendChild(sTT);
+        box.appendChild(sHHMM);
+        box.appendChild(sMJ);
+
+        header.appendChild(box);
+        return box;
+      }
+
+      function renderTac(){
+        const box = ensureTacBox();
+        if (!box) return;
+        const { tt, hhmm, mmm, jj } = formatTac(new Date());
+        const sTT   = document.getElementById('tacTT');
+        const sHHMM = document.getElementById('tacHHMM');
+        const sMJ   = document.getElementById('tacMMMJJ');
+        if (sTT)   sTT.textContent = tt;
+        if (sHHMM) sHHMM.textContent = hhmm;
+        if (sMJ)   sMJ.textContent = `${mmm} ${jj}`;
+      }
+
+      renderTac();
+      setInterval(renderTac, 1000);
+    })();
+    /* ===== Ende Taktische Zeit ===== */
   </script>
 </body>
 </html>
