@@ -147,6 +147,22 @@
       padding:1rem 1.25rem; color:#6b7280; font-size:.9rem; text-align:center;
       border-top:1px dashed #e5e7eb; background:#fafafa;
     }
+
+    /* Entfernen-Dialog */
+    .modal-backdrop{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background:rgba(15,23,42,.45); backdrop-filter:blur(2px);
+      padding:1rem; z-index:120;
+    }
+    .modal-backdrop.hidden{ display:none; }
+    .modal-card{
+      background:#fff; border-radius:0.75rem; padding:1.5rem;
+      max-width:22rem; width:100%; border:1px solid #e5e7eb;
+      box-shadow:0 20px 40px rgba(15,23,42,.18);
+    }
+    .modal-card h4{ font-size:1.1rem; font-weight:700; color:#1d4ed8; margin-bottom:.75rem; }
+    .modal-card p{ color:#4b5563; font-size:.9rem; line-height:1.4; }
+    .modal-actions{ display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.25rem; }
   </style>
 </head>
 <body class="bg-gradient-to-tr from-blue-50 to-blue-100 min-h-screen p-6">
@@ -206,6 +222,17 @@
 
     <!-- Terminreihen -->
     <div id="terminreihen-container" class="space-y-8 mt-4"></div>
+
+    <div id="confirmRemoveModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="removeModalTitle">
+      <div class="modal-card">
+        <h4 id="removeModalTitle">Terminreihe entfernen</h4>
+        <p id="removeModalMessage">Soll die Terminreihe wirklich entfernt werden?</p>
+        <div class="modal-actions">
+          <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300" data-action="cancel-remove">Abbrechen</button>
+          <button type="button" class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700" data-action="confirm-remove">Entfernen</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Aktionen -->
     <div class="flex flex-wrap gap-4 justify-center pt-6 md:pt-5">
@@ -295,6 +322,28 @@
 /* ========= Basics ========= */
 const $ = sel => document.querySelector(sel);
 const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const removeModalEl = document.getElementById('confirmRemoveModal');
+const removeModalMessageEl = document.getElementById('removeModalMessage');
+const removeModalConfirmBtn = removeModalEl?.querySelector('[data-action="confirm-remove"]');
+const removeModalCancelBtn = removeModalEl?.querySelector('[data-action="cancel-remove"]');
+let pendingRemoveIndex = null;
+let removeModalPrevFocus = null;
+function isRemoveModalOpen(){ return !!removeModalEl && !removeModalEl.classList.contains('hidden'); }
+function openRemoveModal(index){
+  if(!removeModalEl) return;
+  pendingRemoveIndex = index;
+  if(removeModalMessageEl) removeModalMessageEl.textContent = `Soll Terminreihe ${index+1} wirklich entfernt werden?`;
+  removeModalPrevFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  removeModalEl.classList.remove('hidden');
+  setTimeout(()=>{ removeModalConfirmBtn?.focus(); },0);
+}
+function closeRemoveModal(){
+  if(!removeModalEl) return;
+  removeModalEl.classList.add('hidden');
+  pendingRemoveIndex = null;
+  const focusTarget = removeModalPrevFocus; removeModalPrevFocus = null;
+  if(focusTarget){ try{ focusTarget.focus(); }catch(_){} }
+}
 
 /* ========= Brand-Logo ========= */
 const BRAND_CANDIDATES = [
@@ -335,7 +384,10 @@ function createTerminreihe(index){
   const y=new Date().getFullYear(); const {minDateStr,maxDateStr}=getYearBounds();
   return `
   <div class="border p-4 rounded-xl bg-blue-50 space-y-3 terminreihe">
-    <h3 class="text-xl font-extrabold text-blue-700 uppercase">Terminreihe ${index}</h3>
+    <div class="flex items-center justify-between gap-3">
+      <h3 class="text-xl font-extrabold text-blue-700 uppercase">Terminreihe ${index}</h3>
+      <button type="button" class="remove-terminreihe text-sm font-semibold text-red-600 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-lg transition disabled-btn" disabled>Terminreihe entfernen</button>
+    </div>
     <label class="block font-medium">Bezeichnung:
       <input type="text" class="dienst_bezeichnung w-full border rounded px-3 py-2">
       <span class="error-msg">Bitte eine Bezeichnung eingeben.</span>
@@ -403,9 +455,8 @@ function createTerminreihe(index){
   </div>`;
 }
 function safeParseInt(v,def){ const n=parseInt(v,10); return Number.isFinite(n)?n:def; }
-function updateTerminreihen(opts={}){
-  const container=$('#terminreihen-container'); const fresh=!!opts.fresh;
-  const snapshot = fresh? [] : Array.from(container.querySelectorAll('.terminreihe')).map(reihe=>{
+function captureTerminreihen(container){
+  return Array.from(container.querySelectorAll('.terminreihe')).map(reihe=>{
     const q=s=>reihe.querySelector(s), v=s=>q(s)?.value || '';
     return {
       bezeichnung:v('.dienst_bezeichnung'), wochentag:v('.dienst_wochentag'), turnus:v('.dienst_turnus')||'woechentlich',
@@ -415,7 +466,16 @@ function updateTerminreihen(opts={}){
       startDateManual:q('.dienst_start')?.dataset.manual==='1', endDateManual:q('.dienst_ende')?.dataset.manual==='1'
     };
   });
-  container.innerHTML=''; const count=Math.min(Math.max(safeParseInt($('#anzahl_reihen')?.value,1),1),5);
+}
+function updateTerminreihen(opts={}){
+  const container=$('#terminreihen-container'); if(!container) return;
+  const fresh=!!opts.fresh;
+  const providedSnapshot=Array.isArray(opts.snapshot)?opts.snapshot:null;
+  const snapshot=fresh?[]:(providedSnapshot||captureTerminreihen(container));
+  let count=Number.isFinite(opts.forcedCount)?opts.forcedCount:safeParseInt($('#anzahl_reihen')?.value,1);
+  count=Math.min(Math.max(count||1,1),5);
+
+  container.innerHTML='';
   for(let i=1;i<=count;i++) container.insertAdjacentHTML('beforeend', createTerminreihe(i));
 
   const neu=Array.from(container.querySelectorAll('.terminreihe'));
@@ -443,6 +503,30 @@ function updateTerminreihen(opts={}){
       else { monatDiv.classList.add('hidden'); selMon.setAttribute('disabled','disabled'); }
     });
   });
+
+  updateRemoveButtonsState(container);
+}
+function updateRemoveButtonsState(container){
+  const rows=container?.querySelectorAll('.terminreihe')||[];
+  const disable=rows.length<=1;
+  rows.forEach(row=>{
+    const btn=row.querySelector('.remove-terminreihe');
+    if(!btn) return;
+    btn.disabled=disable;
+    btn.classList.toggle('disabled-btn', disable);
+  });
+}
+function removeTerminreiheAt(index){
+  const container=$('#terminreihen-container');
+  if(!container) return;
+  const snapshot=captureTerminreihen(container).filter((_,i)=>i!==index);
+  const newCount=Math.max(snapshot.length,1);
+  const select=$('#anzahl_reihen');
+  if(select) select.value=String(newCount);
+  updateTerminreihen({ snapshot, forcedCount:newCount });
+  applyDateBounds();
+  applyAutoBadgesForDates();
+  applyAutoBadgesForTimes();
 }
 
 /* ========= Auto-Badges ========= */
@@ -575,6 +659,33 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       else if(werktage.includes(val)){ if(st&&!ms){st.value='19:00';setAutoBadgeFor(st,true);} if(en&&!me){en.value='22:30';setAutoBadgeFor(en,true);} }
     }
     if(e.target.matches('.dienst_turnus, .dienst_monat_position, .dienst_wochentag, .dienst_start, .dienst_ende')) validateTerminreihe(r);
+  });
+  $('#terminreihen-container').addEventListener('click', e=>{
+    const btn=e.target.closest('.remove-terminreihe');
+    if(!btn) return;
+    e.preventDefault();
+    if(btn.disabled) return;
+    const container=$('#terminreihen-container');
+    const reihe=btn.closest('.terminreihe');
+    if(!container || !reihe) return;
+    const reihen=Array.from(container.querySelectorAll('.terminreihe'));
+    const idx=reihen.indexOf(reihe);
+    if(idx<0) return;
+    openRemoveModal(idx);
+  });
+
+  removeModalCancelBtn?.addEventListener('click', e=>{ e.preventDefault(); closeRemoveModal(); });
+  removeModalConfirmBtn?.addEventListener('click', e=>{
+    e.preventDefault();
+    const idx=pendingRemoveIndex;
+    closeRemoveModal();
+    if(idx!==null) removeTerminreiheAt(idx);
+  });
+  removeModalEl?.addEventListener('click', e=>{
+    if(e.target===removeModalEl) closeRemoveModal();
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && isRemoveModalOpen()){ e.preventDefault(); closeRemoveModal(); }
   });
 
   // Floating Buttons
