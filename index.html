@@ -1147,11 +1147,11 @@ async function exportXlsx(){
   }catch(err){ console.error(err); alert('Excel-Export fehlgeschlagen. Details in der Konsole.'); }
 }
 
-/* ========= Buttons / Sichtbarkeit ========= */
-document.getElementById('btnCsv').addEventListener('click', exportCsv);
-document.getElementById('btnPdf').addEventListener('click', exportPdf);
-document.getElementById('btnIcs').addEventListener('click', exportIcs);
-document.getElementById('btnXlsx').addEventListener('click', exportXlsx);
+// Event-Listener nur hinzufügen, wenn die Buttons existieren
+document.getElementById('btnCsv')?.addEventListener('click', exportCsv);
+document.getElementById('btnPdf')?.addEventListener('click', exportPdf);
+document.getElementById('btnIcs')?.addEventListener('click', exportIcs);
+document.getElementById('btnXlsx')?.addEventListener('click', exportXlsx);
 
 const btnToTop=$('#btnToTop'), btnToResults=$('#btnToResults'), btnToExport=$('#btnToExport');
 function hasResultsVisible(){ return !$('#ergebnisTabelle').classList.contains('hidden'); }
