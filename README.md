@@ -9,7 +9,7 @@ DienstOrbit ist ein Dienstplan-Generator für THW-Ortsverbände und ähnliche Or
 
 ## Features
 
-- **Dienstreihen anlegen:** Bis zu 5 Terminreihen mit individuellen Einstellungen (Bezeichnung, Wochentag, Turnus, Zeitraum, Uhrzeit).
+- **Dienstreihen anlegen:** Bis zu 9 Terminreihen mit individuellen Einstellungen (Bezeichnung, Wochentag, Turnus inkl. Einzeltermin, Zeitraum, Uhrzeit).
 - **Feiertage & Ferien:** Automatische Ermittlung und Kennzeichnung von Terminen an Feiertagen und in Ferien (OpenHolidaysAPI).
 - **Export:** Ergebnisse können als CSV, PDF, ICS (Kalender) und Excel (.xlsx) heruntergeladen werden.
 - **Auto-Badges:** Vorschlagswerte für Zeiten und Daten werden automatisch gesetzt und als "⚡ auto" markiert.

@@ -209,10 +209,11 @@
         </label>
       </div>
 
-      <label class="block font-medium">Anzahl Terminreihen (max. 5):
+      <label class="block font-medium">Anzahl Terminreihen (max. 9):
         <select id="anzahl_reihen" class="w-full border border-blue-200 rounded-lg px-3 py-2 mt-1">
           <option value="1" selected>1</option><option value="2">2</option><option value="3">3</option>
-          <option value="4">4</option><option value="5">5</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option><option value="9">9</option>
         </select>
       </label>
 
@@ -378,6 +379,30 @@ function updateGlobalHints(){
   const base=`Gültiger Datumsbereich für Start-/Enddatum: 01.01.${minYear} bis 31.12.${maxYear}.`;
   $('#global_date_hint').textContent = base + ' Die Ferien-/Feiertags-Regelung erfolgt je Terminreihe.';
 }
+function syncTurnusUi(reihe){
+  if(!reihe) return;
+  const turnus=reihe.querySelector('.dienst_turnus')?.value;
+  const monatWrap=reihe.querySelector('.monatlich-option');
+  const monatPos=reihe.querySelector('.dienst_monat_position');
+  const start=reihe.querySelector('.dienst_start');
+  const ende=reihe.querySelector('.dienst_ende');
+
+  if(turnus==='monatlich'){ monatWrap?.classList.remove('hidden'); monatPos?.removeAttribute('disabled'); }
+  else { monatWrap?.classList.add('hidden'); monatPos?.setAttribute('disabled','disabled'); }
+
+  if(!ende) return;
+  if(turnus==='einzeltermin'){
+    if(ende.dataset.prevValue===undefined) ende.dataset.prevValue=ende.value||'';
+    if(start) ende.value=start.value||'';
+    ende.setAttribute('disabled','disabled');
+  } else {
+    if(ende.hasAttribute('disabled')) ende.removeAttribute('disabled');
+    if(ende.dataset.prevValue!==undefined){
+      if(ende.dataset.prevValue) ende.value=ende.dataset.prevValue;
+      delete ende.dataset.prevValue;
+    }
+  }
+}
 
 /* ========= Terminreihen ========= */
 function createTerminreihe(index){
@@ -406,6 +431,7 @@ function createTerminreihe(index){
           <option value="woechentlich">Wöchentlich</option>
           <option value="2woechentlich">Zweiwöchentlich</option>
           <option value="monatlich">Monatlich</option>
+          <option value="einzeltermin">Einzeltermin</option>
         </select>
         <span class="error-msg">Bitte einen Turnus wählen.</span>
       </label>
@@ -473,7 +499,7 @@ function updateTerminreihen(opts={}){
   const providedSnapshot=Array.isArray(opts.snapshot)?opts.snapshot:null;
   const snapshot=fresh?[]:(providedSnapshot||captureTerminreihen(container));
   let count=Number.isFinite(opts.forcedCount)?opts.forcedCount:safeParseInt($('#anzahl_reihen')?.value,1);
-  count=Math.min(Math.max(count||1,1),5);
+  count=Math.min(Math.max(count||1,1),9);
 
   container.innerHTML='';
   for(let i=1;i<=count;i++) container.insertAdjacentHTML('beforeend', createTerminreihe(i));
@@ -483,8 +509,6 @@ function updateTerminreihen(opts={}){
     const d=snapshot[i]; if(!d) return;
     const set=(sel,val)=>{ const el=r.querySelector(sel); if(el && val!=='') el.value=val; };
     set('.dienst_bezeichnung', d.bezeichnung); set('.dienst_wochentag', d.wochentag); set('.dienst_turnus', d.turnus);
-    const monatDiv=r.querySelector('.monatlich-option'); const selMon=monatDiv?.querySelector('select');
-    if(d.turnus==='monatlich'){ monatDiv?.classList.remove('hidden'); selMon?.removeAttribute('disabled'); }
     set('.dienst_monat_position', d.monatPos);
     const sDate=r.querySelector('.dienst_start'), eDate=r.querySelector('.dienst_ende');
     if(sDate){ if(d.start) sDate.value=d.start; if(d.startDateManual) sDate.dataset.manual='1'; }
@@ -494,13 +518,13 @@ function updateTerminreihen(opts={}){
     if(en){ if(d.endzeit) en.value=d.endzeit; if(d.endzeitManual) en.dataset.manual='1'; }
   });
 
+  container.querySelectorAll('.terminreihe').forEach(syncTurnusUi);
   applyDateBounds(container); updateGlobalHints();
 
   container.querySelectorAll('.dienst_turnus').forEach(select=>{
     select.addEventListener('change', e=>{
-      const wrap=e.target.closest('.terminreihe'); const monatDiv=wrap.querySelector('.monatlich-option'); const selMon=monatDiv.querySelector('select');
-      if(e.target.value==='monatlich'){ monatDiv.classList.remove('hidden'); selMon.removeAttribute('disabled'); }
-      else { monatDiv.classList.add('hidden'); selMon.setAttribute('disabled','disabled'); }
+      const wrap=e.target.closest('.terminreihe');
+      syncTurnusUi(wrap);
     });
   });
 
@@ -579,32 +603,35 @@ function validateTerminreihe(reihe){
   const wochentag=reihe.querySelector('.dienst_wochentag');
   const turnus=reihe.querySelector('.dienst_turnus');
   const monatPos=reihe.querySelector('.dienst_monat_position');
-  const monatWrap=reihe.querySelector('.monatlich-option');
   const start=reihe.querySelector('.dienst_start');
   const ende =reihe.querySelector('.dienst_ende');
   const st=reihe.querySelector('.dienst_startzeit');
   const en=reihe.querySelector('.dienst_endzeit');
   const {minYear,maxYear}=getYearBounds();
+  const isEinzeltermin=turnus?.value==='einzeltermin';
+  const isMonatlich=turnus?.value==='monatlich';
+
+  syncTurnusUi(reihe);
 
   if(!bezeichnung.value.trim()){ setFieldError(bezeichnung,'Bitte eine Bezeichnung eingeben.'); valid=false; } else clearFieldError(bezeichnung);
   if(!wochentag.value){ setFieldError(wochentag,'Bitte einen Wochentag wählen.'); valid=false; } else clearFieldError(wochentag);
   if(!turnus.value){ setFieldError(turnus,'Bitte einen Turnus wählen.'); valid=false; } else clearFieldError(turnus);
 
-  if(turnus.value==='monatlich'){
-    monatWrap?.classList.remove('hidden'); monatPos?.removeAttribute('disabled');
+  if(isMonatlich){
     if(!monatPos.value){ setFieldError(monatPos,'Bitte die Position im Monat wählen.'); valid=false; } else clearFieldError(monatPos);
-  } else { monatWrap?.classList.add('hidden'); monatPos?.setAttribute('disabled','disabled'); clearFieldError(monatPos); }
+  } else { clearFieldError(monatPos); }
 
   if(!start.value){ setFieldError(start,'Bitte ein Startdatum wählen.'); valid=false; }
   else { const y=new Date(start.value).getFullYear(); if(y<minYear||y>maxYear){ setFieldError(start,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(start); }
 
-  if(!ende.value){ setFieldError(ende,'Bitte ein Enddatum wählen.'); valid=false; }
-  else { const y2=new Date(ende.value).getFullYear(); if(y2<minYear||y2>maxYear){ setFieldError(ende,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(ende); }
-
-  if(start.value && ende.value){
-    const sd=new Date(start.value), ed=new Date(ende.value);
-    if(sd>ed){ setFieldError(ende,'Enddatum liegt vor Startdatum.'); valid=false; } else clearFieldError(ende);
-  }
+  if(!isEinzeltermin){
+    if(!ende.value){ setFieldError(ende,'Bitte ein Enddatum wählen.'); valid=false; }
+    else { const y2=new Date(ende.value).getFullYear(); if(y2<minYear||y2>maxYear){ setFieldError(ende,`Erlaubter Zeitraum: ${minYear}–${maxYear}.`); valid=false; } else clearFieldError(ende); }
+    if(start.value && ende.value){
+      const sd=new Date(start.value), ed=new Date(ende.value);
+      if(sd>ed){ setFieldError(ende,'Enddatum liegt vor Startdatum.'); valid=false; } else clearFieldError(ende);
+    }
+  } else { clearFieldError(ende); }
 
   if(!st.value){ setFieldError(st,'Bitte eine Startzeit angeben.'); valid=false; } else clearFieldError(st);
   if(!en.value){ setFieldError(en,'Bitte eine Endzeit angeben.'); valid=false; } else clearFieldError(en);
@@ -646,6 +673,13 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   $('#terminreihen-container').addEventListener('input', e=>{
     const reihe=e.target.closest('.terminreihe'); if(!reihe) return;
     if(e.target.matches('.dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')){ e.target.dataset.manual='1'; setAutoBadgeFor(e.target,false); }
+    if(e.target.matches('.dienst_start')){
+      const turnus=reihe.querySelector('.dienst_turnus')?.value;
+      if(turnus==='einzeltermin'){
+        const ende=reihe.querySelector('.dienst_ende');
+        if(ende) ende.value=e.target.value||'';
+      }
+    }
     if(e.target.matches('.dienst_bezeichnung, .dienst_startzeit, .dienst_endzeit, .dienst_start, .dienst_ende')) validateTerminreihe(reihe);
   });
   $('#terminreihen-container').addEventListener('change', e=>{
@@ -1208,7 +1242,9 @@ document.getElementById('btnBerechnen').addEventListener('click', async ()=>{
       const tE=reihe.querySelector('.dienst_endzeit').value;
 
       let cur=new Date(dS); const ziel=tagZuIndex[woch]; const termine=[];
-      if (turn==='monatlich'){
+      if (turn==='einzeltermin'){
+        if(!isNaN(dS)) termine.push(new Date(dS));
+      } else if (turn==='monatlich'){
         cur.setDate(1);
         while (cur<=dE){
           const y=cur.getFullYear(), m=cur.getMonth();
