@@ -32,6 +32,7 @@ Download die index.html und logo_dienstorbit.png und im gleichen Verzeichnis abl
 ## Hinweise
 
 - Die Anwendung benötigt eine Internetverbindung für die Abfrage von Feiertagen und Ferien.
+- Beim Turnus **Einzeltermin** wird das Enddatum automatisch auf das Startdatum gesetzt und ist deaktiviert.
 - Die Datenquelle für Feiertage und Ferien ist [OpenHolidaysAPI](https://openholidaysapi.org/).
 - Die Nutzung ist frei unter der MIT-Lizenz. Siehe [`LICENSE`](LICENSE).
 
