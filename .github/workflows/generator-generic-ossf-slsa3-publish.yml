@@ -27,14 +27,13 @@ jobs:
 
       # ========================================================
       #
-      # Step 1: Build your artifacts.
+      # Step 1: Prepare release assets.
       #
       # ========================================================
-      - name: Build artifacts
+      - name: Prepare release assets
         run: |
-            # These are some amazing artifacts.
-            echo "artifact1" > artifact1
-            echo "artifact2" > artifact2
+            # Static assets are already in the repo.
+            ls -la index.html logo_dienstorbit.png
 
       # ========================================================
       #
@@ -49,10 +48,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          # List the artifacts the provenance will refer to.
-          files=$(ls artifact*)
+          # List the release assets the provenance will refer to.
+          files=(index.html logo_dienstorbit.png)
+          for file in "${files[@]}"; do
+            test -f "${file}"
+          done
           # Generate the subjects (base64 encoded).
-          echo "hashes=$(sha256sum $files | base64 -w0)" >> "${GITHUB_OUTPUT}"
+          digests=$(sha256sum "${files[@]}" | base64 -w0)
+          echo "digests=${digests}" >> "${GITHUB_OUTPUT}"
 
   provenance:
     needs: [build]
